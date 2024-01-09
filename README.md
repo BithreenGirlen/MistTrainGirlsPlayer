@@ -31,7 +31,7 @@
 - [spine-cpp-3.8](https://github.com/EsotericSoftware/spine-runtimes/tree/3.8)
 ## 補足説明
 ### 乗算済みアルファ
-`spine-sfml.cpp`はそのままではうまく表示できないので毎度算出するようにしています。
+そのままではうまく表示できないので`spine-sfml.cpp`にて毎度算出するようにしています。
 ```cpp
 usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
 sf::BlendMode blend;

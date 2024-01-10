@@ -26,8 +26,6 @@ std::shared_ptr<spine::SkeletonData> readSkeletonJsonData(const spine::String& f
 	auto skeletonData = json.readSkeletonDataFile(filename);
 	if (!skeletonData) 
 	{
-		/*必要であれば<windows.h>をインクルードしてMessageBoxを使う*/
-		//printf("%s\n", json.getError().buffer());
 		return nullptr;
 	}
 	return std::shared_ptr<spine::SkeletonData>(skeletonData);
@@ -40,7 +38,6 @@ std::shared_ptr<spine::SkeletonData> readSkeletonBinaryData(const char* filename
 	auto skeletonData = binary.readSkeletonDataFile(filename);
 	if (!skeletonData) 
 	{
-		//printf("%s\n", binary.getError().buffer());
 		return nullptr;
 	}
 	return std::shared_ptr<spine::SkeletonData>(skeletonData);
@@ -67,10 +64,10 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 
 		m_atlases.emplace_back(std::make_unique<spine::Atlas>(strAtlasPath.c_str(), &m_textureLoader));
 
-		std::shared_ptr<spine::SkeletonData> skeltonData = readSkeletonBinaryData(strSkeletonPath.c_str(), m_atlases.back().get(), 1.0f);
-		if (skeltonData == nullptr)return false;
+		std::shared_ptr<spine::SkeletonData> skeletonData = readSkeletonBinaryData(strSkeletonPath.c_str(), m_atlases.back().get(), 1.0f);
+		if (skeletonData == nullptr)return false;
 
-		m_skeletonData.emplace_back(skeltonData);
+		m_skeletonData.emplace_back(skeletonData);
 	}
 
 	if (m_skeletonData.empty())return false;
@@ -126,6 +123,8 @@ int CSfmlSpinePlayer::Display()
 	sf::Vector2i iMouseStartPos;
 	sf::Vector2i iOffset;
 
+	bool bOnWindowMove = false;
+
 	size_t nAudioIndex = 0;
 	sf::SoundBuffer soundBuffer;
 	sf::Sound sound;
@@ -162,6 +161,12 @@ int CSfmlSpinePlayer::Display()
 			case sf::Event::MouseButtonReleased:
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
+					if (bOnWindowMove || sf::Mouse::isButtonPressed(sf::Mouse::Right))
+					{
+						bOnWindowMove ^= true;
+						break;
+					}
+
 					int iX = iMouseStartPos.x - event.mouseButton.x;
 					int iY = iMouseStartPos.y - event.mouseButton.y;
 
@@ -281,21 +286,6 @@ int CSfmlSpinePlayer::Display()
 					iRet = 1;
 					window.close();
 				}
-				//if (event.key.code == sf::Keyboard::Key::Insert)
-				//{
-				//	sf::Texture texture;
-				//	texture.create(window.getSize().x, window.getSize().y);
-				//	texture.update(window);
-				//	sf::Image image = texture.copyToImage();
-				//	spine:: Animation *animation = m_skeletonData.at(0).get()->findAnimation(m_animationNames.at(nAnimationIndex).c_str());
-				//	std::string strElapsed;
-				//	if (animation != nullptr)
-				//	{
-				//		strElapsed = std::to_string(animation->getDuration());
-				//	}
-				//	std::string strFileName = m_FolderName + "_" + m_animationNames.at(nAnimationIndex) + "_" + strElapsed + ".png";
-				//	image.saveToFile(strFileName);
-				//}
 				break;
 			}
 		}
@@ -324,6 +314,13 @@ int CSfmlSpinePlayer::Display()
 					sound.play();
 				}
 			}
+		}
+
+		if (bOnWindowMove)
+		{
+			int iPosX = sf::Mouse::getPosition().x - window.getSize().x / 2;
+			int iPosY = sf::Mouse::getPosition().y - window.getSize().y / 2;
+			window.setPosition(sf::Vector2i(iPosX, iPosY));
 		}
 	}
 	return iRet;

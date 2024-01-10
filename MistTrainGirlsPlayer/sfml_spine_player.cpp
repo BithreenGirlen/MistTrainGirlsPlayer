@@ -137,6 +137,7 @@ int CSfmlSpinePlayer::Display()
 		sound.play();
 	}
 
+	int iRet = 0;
 	sf::RenderWindow window(sf::VideoMode(static_cast<unsigned int>(m_fMaxWidth), static_cast<unsigned int>(m_fMaxHeight)), "MistTrainGirls spine player", sf::Style::None);
 	window.setPosition(sf::Vector2i(0, 0));
 	window.setFramerateLimit(0);
@@ -270,6 +271,16 @@ int CSfmlSpinePlayer::Display()
 				{
 					window.close();
 				}
+				if (event.key.code == sf::Keyboard::Key::Up)
+				{
+					iRet = 2;
+					window.close();
+				}
+				if (event.key.code == sf::Keyboard::Key::Down)
+				{
+					iRet = 1;
+					window.close();
+				}
 				//if (event.key.code == sf::Keyboard::Key::Insert)
 				//{
 				//	sf::Texture texture;
@@ -315,7 +326,7 @@ int CSfmlSpinePlayer::Display()
 			}
 		}
 	}
-	return 0;
+	return iRet;
 }
 /*è¡ãé*/
 void CSfmlSpinePlayer::Clear()

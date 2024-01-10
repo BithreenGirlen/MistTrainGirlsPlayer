@@ -40,6 +40,27 @@ void GetAudioFileList(const std::wstring& wstrFolderPath, std::vector<std::strin
     }
 }
 
+void GetFolderList(const std::wstring& wstrFolderPath, std::vector<std::wstring>& folders, size_t *nIndex)
+{
+    std::wstring wstrParent;
+    std::wstring wstrCurrent;
+
+    size_t nPos = wstrFolderPath.find_last_of(L"\\/");
+    if (nPos != std::wstring::npos)
+    {
+        wstrParent = wstrFolderPath.substr(0, nPos);
+        wstrCurrent = wstrFolderPath.substr(nPos + 1);
+    }
+
+    win_filesystem::CreateFilePathList(wstrParent.c_str(), nullptr, folders);
+
+    auto iter = std::find(folders.begin(), folders.end(), wstrFolderPath);
+    if (iter != folders.end())
+    {
+        *nIndex = std::distance(folders.begin(), iter);
+    }
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -48,22 +69,48 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    std::wstring wstrFolderPath = win_dialogue::SelectWorkFolder(nullptr);
-    if (!wstrFolderPath.empty())
+    std::wstring wstrPickedFolder = win_dialogue::SelectWorkFolder(nullptr);
+    if (!wstrPickedFolder.empty())
     {
-        std::vector<std::string> names;
-        GetSpineNameList(wstrFolderPath, names);
-
-        std::vector<std::string> audioFilePaths;
-        GetAudioFileList(wstrFolderPath, audioFilePaths);
-
-        CSfmlSpinePlayer SfmlPlayer;
-        bool bRet = SfmlPlayer.SetSpines(win_text::NarrowUtf8(wstrFolderPath), names);
-        if (bRet)
+        std::vector<std::wstring> folders;
+        size_t nFolderIndex = 0;
+        GetFolderList(wstrPickedFolder, folders, &nFolderIndex);
+        for (;;)
         {
-            SfmlPlayer.SetAudios(audioFilePaths);
+            std::wstring wstrFolderPath = folders.at(nFolderIndex);
 
-            SfmlPlayer.Display();
+            std::vector<std::string> names;
+            GetSpineNameList(wstrFolderPath, names);
+
+            std::vector<std::string> audioFilePaths;
+            GetAudioFileList(wstrFolderPath, audioFilePaths);
+
+            CSfmlSpinePlayer SfmlPlayer;
+            bool bRet = SfmlPlayer.SetSpines(win_text::NarrowUtf8(wstrFolderPath), names);
+            if (bRet)
+            {
+                SfmlPlayer.SetAudios(audioFilePaths);
+
+                int iRet = SfmlPlayer.Display();
+                if (iRet == 1)
+                {
+                    ++nFolderIndex;
+                    if (nFolderIndex > folders.size() - 1)nFolderIndex = 0;
+                }
+                else if (iRet == 2)
+                {
+                    --nFolderIndex;
+                    if (nFolderIndex > folders.size() - 1)nFolderIndex = folders.size() - 1;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
         }
     }
 

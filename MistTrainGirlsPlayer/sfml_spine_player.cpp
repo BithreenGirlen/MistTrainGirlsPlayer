@@ -250,22 +250,27 @@ int CSfmlSpinePlayer::Display()
 					else
 					{
 						fSkeletonScale -= 0.025f;
-						if (fSkeletonScale < 0.049f)fSkeletonScale = 0.05f;
+						if (fSkeletonScale < 0.49f)fSkeletonScale = 0.5f;
 					}
 					for (size_t i = 0; i < m_drawables.size(); ++i)
 					{
-						m_drawables.at(i).get()->skeleton->setScaleX(fSkeletonScale);
-						m_drawables.at(i).get()->skeleton->setScaleY(fSkeletonScale);
+						m_drawables.at(i).get()->skeleton->setScaleX(fSkeletonScale > 0.99f ? fSkeletonScale : 1.f);
+						m_drawables.at(i).get()->skeleton->setScaleY(fSkeletonScale > 0.99f ? fSkeletonScale : 1.f);
 					}
-					window.setSize(sf::Vector2u(static_cast<unsigned int>(m_fMaxWidth * fSkeletonScale), static_cast<unsigned int>(m_fMaxHeight * fSkeletonScale)));
+					unsigned int uiWindowWidthMax = static_cast<unsigned int>(m_fMaxWidth * (fSkeletonScale - 0.025f));
+					unsigned int uiWindowHeightMax = static_cast<unsigned int>(m_fMaxWidth * (fSkeletonScale - 0.025f));
+					if (uiWindowWidthMax < sf::VideoMode::getDesktopMode().width || uiWindowHeightMax < sf::VideoMode::getDesktopMode().height)
+					{
+						window.setSize(sf::Vector2u(static_cast<unsigned int>(m_fMaxWidth* fSkeletonScale), static_cast<unsigned int>(m_fMaxHeight* fSkeletonScale)));
+					}
 				}
 				break;
 			case sf::Event::KeyReleased:
-				if (event.key.code = sf::Keyboard::Key::Escape)
+				if (event.key.code == sf::Keyboard::Key::Escape)
 				{
 					window.close();
 				}
-				//if (event.key.code = sf::Keyboard::Key::Insert)
+				//if (event.key.code == sf::Keyboard::Key::Insert)
 				//{
 				//	sf::Texture texture;
 				//	texture.create(window.getSize().x, window.getSize().y);

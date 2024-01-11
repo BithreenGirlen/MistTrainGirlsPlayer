@@ -56,6 +56,13 @@ Resource
 そのままではうまく表示できないので`spine-sfml.cpp`にて毎度算出するようにしています。
 ```cpp
 usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
+if (!usePremultipliedAlpha)
+{
+	if (r <= a || g <= a || b <= a && a == 255)
+	{
+		slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
+	}
+}
 sf::BlendMode blend;
 switch (slot.getData().getBlendMode())
 {
@@ -98,6 +105,3 @@ default:
   </pre>
 ### 視点
 背景に合わせているので、ゲーム中の表示より遠のいています。拡縮で調整して下さい。
-
-### 窓移動
-通常は液晶原点に位置してますが、複数起動して鑑賞する際などにはこの機能で移動して下さい。

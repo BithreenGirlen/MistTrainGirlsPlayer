@@ -88,7 +88,11 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 	for (unsigned i = 0; i < skeleton->getSlots().size(); ++i) {
 		Slot &slot = *skeleton->getDrawOrder()[i];
 		Attachment *attachment = slot.getAttachment();
-		if (!attachment) continue;
+		if (!attachment)
+		{
+			clipper.clipEnd();
+			continue;
+		}
 
 		// Early out if the slot color is 0 or the bone is not active
 		if (slot.getColor().a == 0 || !slot.getBone().isActive()) {
@@ -161,6 +165,14 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 		light.a = a / 255.0f;
 
 		usePremultipliedAlpha = r == a && g == 255 && b == 255 && a == 255;
+		if (!usePremultipliedAlpha)
+		{
+			if (r <= a || g <= a || b <= a && a == 255)
+			{
+				slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
+			}
+		}
+
 		sf::BlendMode blend;
 		switch (slot.getData().getBlendMode())
 		{

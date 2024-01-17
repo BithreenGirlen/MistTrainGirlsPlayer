@@ -90,7 +90,7 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 		Attachment *attachment = slot.getAttachment();
 		if (!attachment)
 		{
-			clipper.clipEnd();
+			clipper.clipEnd(slot);
 			continue;
 		}
 
@@ -164,12 +164,22 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 		light.b = b / 255.0f;
 		light.a = a / 255.0f;
 
-		usePremultipliedAlpha = r == a && g == 255 && b == 255 && a == 255;
+		usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
 		if (!usePremultipliedAlpha)
 		{
 			if (r <= a || g <= a || b <= a && a == 255)
 			{
 				slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
+			}
+			if (a > 96)
+			{
+				for (size_t ii = 0; ii < m_blendMultiplyList.size(); ++ii)
+				{
+					if (strstr(slot.getData().getName().buffer(), m_blendMultiplyList.at(ii).c_str()))
+					{
+						slot.getData().setBlendMode(spine::BlendMode::BlendMode_Multiply);
+					}
+				}
 			}
 		}
 

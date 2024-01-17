@@ -56,9 +56,10 @@ public:
 
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
-	void setUsePremultipliedAlpha(bool usePMA) { usePremultipliedAlpha = usePMA; };
-
-	bool getUsePremultipliedAlpha() const { return usePremultipliedAlpha; };
+	void SetBlendMultiplyList(const std::vector<std::string>& list)
+	{
+		m_blendMultiplyList = list;
+	}
 private:
 	mutable bool ownsAnimationStateData;
 	mutable Vector<float> worldVertices;
@@ -67,6 +68,7 @@ private:
 	mutable Vector<unsigned short> quadIndices;
 	mutable SkeletonClipping clipper;
 	mutable bool usePremultipliedAlpha = true;
+	std::vector<std::string> m_blendMultiplyList;
 };
 
 class SFMLTextureLoader : public TextureLoader {

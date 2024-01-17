@@ -171,7 +171,7 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 			{
 				slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
 			}
-			if (a > 96)
+			if (a > 109)
 			{
 				for (size_t ii = 0; ii < m_blendMultiplyList.size(); ++ii)
 				{

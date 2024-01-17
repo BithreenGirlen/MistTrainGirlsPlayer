@@ -76,6 +76,8 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 	m_fMaxWidth = m_skeletonData.at(0).get()->getWidth();
 	m_fMaxHeight = m_skeletonData.at(0).get()->getHeight();
 
+	const std::vector<std::string> blendMultiplyList{ "face", "breath", "cheek" };
+
 	for (size_t i = 0; i < m_skeletonData.size(); ++i)
 	{
 		m_drawables.emplace_back(std::make_shared<spine::SkeletonDrawable>(m_skeletonData.at(i).get()));
@@ -84,6 +86,8 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 		drawable->timeScale = 1.0f;
 		drawable->skeleton->setPosition(m_fMaxWidth / 2, m_fMaxHeight / 2);
 		drawable->skeleton->updateWorldTransform();
+
+		drawable->SetBlendMultiplyList(blendMultiplyList);
 
 		auto& animations = m_skeletonData.at(i).get()->getAnimations();
 		for (size_t ii = 0; ii < animations.size(); ++ii)
@@ -124,6 +128,7 @@ int CSfmlSpinePlayer::Display()
 	sf::Vector2i iOffset;
 
 	bool bOnWindowMove = false;
+	bool bSpeedHavingChanged = false;
 
 	size_t nAudioIndex = 0;
 	sf::SoundBuffer soundBuffer;
@@ -161,6 +166,12 @@ int CSfmlSpinePlayer::Display()
 			case sf::Event::MouseButtonReleased:
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
+					if (bSpeedHavingChanged)
+					{
+						bSpeedHavingChanged = false;
+						break;
+					}
+
 					if (bOnWindowMove || sf::Mouse::isButtonPressed(sf::Mouse::Right))
 					{
 						bOnWindowMove ^= true;
@@ -225,6 +236,7 @@ int CSfmlSpinePlayer::Display()
 					{
 						m_drawables.at(i).get()->timeScale = fTimeScale;
 					}
+					bSpeedHavingChanged = true;
 				}
 				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{

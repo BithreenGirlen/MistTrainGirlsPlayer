@@ -33,7 +33,7 @@
 | Up | 前のフォルダに移動。 |
 | Down | 次のフォルダに移動。 |
 
-例えば次の構造で`26430105`を再生していた場合、キー入力で`26420105`や`26430205`に移動して再生できます。
+例えば次の階層構造にて`26430105`を再生していた場合、キー入力で`26420105`や`26430205`に移動できます。
 <pre>
 Resource
 ├ ...
@@ -53,7 +53,7 @@ Resource
 - [spine-cpp-3.8](https://github.com/EsotericSoftware/spine-runtimes/tree/3.8)
 ## 補足説明
 ### 乗算済みアルファ
-そのままではうまく表示できないので`spine-sfml.cpp`にて毎度算出するようにしています。
+そのままではうまく表示できないので`spine-sfml.cpp`にて毎度算出し、且つ、いくつかのスロットに対して合成モードを変更しています。
 ```cpp
 usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
 if (!usePremultipliedAlpha)
@@ -61,6 +61,16 @@ if (!usePremultipliedAlpha)
 	if (r <= a || g <= a || b <= a && a == 255)
 	{
 		slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
+	}
+	if (a > 96)
+	{
+		for (size_t ii = 0; ii < m_blendMultiplyList.size(); ++ii)
+		{
+			if (strstr(slot.getData().getName().buffer(), m_blendMultiplyList.at(ii).c_str()))
+			{
+				slot.getData().setBlendMode(spine::BlendMode::BlendMode_Multiply);
+			}
+		}
 	}
 }
 sf::BlendMode blend;
@@ -80,7 +90,15 @@ default:
     break;
 }
 ```
-それでも吐息など一部うまく表示されません。
+変更するスロット名は `sfml_spine_player.cpp`にて指定しています。
+```cpp
+const std::vector<std::string> blendMultiplyList{ "face", "breath", "cheek" };
+for (size_t i = 0; i < m_skeletonData.size(); ++i)
+{
+	/*中略*/
+	drawable->SetBlendMultiplyList(blendMultiplyList);
+}
+```
 ### 立ち絵を表示したい場合
   `usePremultipliedAlpha`を常に`false`にすれば正しく表示できます。  
   上記ライブラリは同梱していないので所定の箇所に補ってビルドして下さい。

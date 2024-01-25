@@ -167,10 +167,6 @@ void SkeletonDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 		usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
 		if (!usePremultipliedAlpha)
 		{
-			if (r <= a || g <= a || b <= a && a == 255)
-			{
-				slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
-			}
 			if (a > 109)
 			{
 				for (size_t ii = 0; ii < m_blendMultiplyList.size(); ++ii)
@@ -291,4 +287,4 @@ void SFMLTextureLoader::unload(void *texture) {
 SpineExtension *getDefaultExtension() {
 	return new DefaultSpineExtension();
 }
-}
+} // namespace spine

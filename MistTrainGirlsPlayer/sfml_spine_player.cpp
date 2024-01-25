@@ -76,7 +76,8 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 	m_fMaxWidth = m_skeletonData.at(0).get()->getWidth();
 	m_fMaxHeight = m_skeletonData.at(0).get()->getHeight();
 
-	const std::vector<std::string> blendMultiplyList{ "face", "breath", "cheek", "effe" };
+	const std::vector<std::string> blendScreenList{ "breath", "effe", "ef_", "steam", "smoke", "swet", "sweat", "yodare", "air_"};
+	const std::vector<std::string> blendMultiplyList{ "face", "cheek" };
 
 	for (size_t i = 0; i < m_skeletonData.size(); ++i)
 	{
@@ -88,6 +89,19 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 		drawable->skeleton->updateWorldTransform();
 
 		drawable->SetBlendMultiplyList(blendMultiplyList);
+
+		auto& slots = m_skeletonData.at(i).get()->getSlots();
+		for (size_t ii = 0; ii < slots.size(); ++ii)
+		{
+			std::string strName = slots[ii]->getName().buffer();
+			for (const std::string& str : blendScreenList)
+			{
+				if (strncmp(strName.c_str(), str.c_str(), str.size()) == 0)
+				{
+					slots[ii]->setBlendMode(spine::BlendMode::BlendMode_Screen);
+				}
+			}
+		}
 
 		auto& animations = m_skeletonData.at(i).get()->getAnimations();
 		for (size_t ii = 0; ii < animations.size(); ++ii)

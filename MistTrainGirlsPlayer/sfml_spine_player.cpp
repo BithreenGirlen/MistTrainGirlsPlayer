@@ -76,7 +76,7 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 	m_fMaxWidth = m_skeletonData.at(0).get()->getWidth();
 	m_fMaxHeight = m_skeletonData.at(0).get()->getHeight();
 
-	const std::vector<std::string> blendScreenList{ "breath", "effe", "ef_", "steam", "smoke", "swet", "sweat", "yodare", "air_"};
+	const std::vector<std::string> blendScreenList{ "breath", "effe", "ef_", "steam", "smoke", "air_", "yuge", "EF_breath", "emo", "bless", "a3"};
 	const std::vector<std::string> blendMultiplyList{ "face", "cheek" };
 
 	for (size_t i = 0; i < m_skeletonData.size(); ++i)

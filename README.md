@@ -21,6 +21,7 @@
 | 入力  | 機能  |
 | --- | --- |
 | マウスホイール | 拡大・縮小。 |
+| 左ボタン + マウスホイール | コマ送り加速・減速 |
 | 左ボタンクリック | 次場面移行。 |
 | 左ボタンドラッグ | 視点移動。 |
 | 中央ボタン | 拡縮・速度・視点初期化。 |
@@ -58,10 +59,6 @@ Resource
 usePremultipliedAlpha = r == 255 && g == 255 && b == 255 && a == 255;
 if (!usePremultipliedAlpha)
 {
-	if (r <= a || g <= a || b <= a && a == 255)
-	{
-		slot.getData().setBlendMode(spine::BlendMode::BlendMode_Screen);
-	}
 	if (a > 109)
 	{
 		for (size_t ii = 0; ii < m_blendMultiplyList.size(); ++ii)
@@ -92,11 +89,23 @@ default:
 ```
 変更するスロット名は `sfml_spine_player.cpp`にて指定しています。
 ```cpp
-const std::vector<std::string> blendMultiplyList{ "face", "breath", "cheek" };
 for (size_t i = 0; i < m_skeletonData.size(); ++i)
 {
 	/*中略*/
 	drawable->SetBlendMultiplyList(blendMultiplyList);
+
+	auto& slots = m_skeletonData.at(i).get()->getSlots();
+	for (size_t ii = 0; ii < slots.size(); ++ii)
+	{
+		std::string strName = slots[ii]->getName().buffer();
+		for (const std::string& str : blendScreenList)
+		{
+			if (strncmp(strName.c_str(), str.c_str(), str.size()) == 0)
+			{
+				slots[ii]->setBlendMode(spine::BlendMode::BlendMode_Screen);
+			}
+		}
+	}
 }
 ```
 ### 立ち絵を表示したい場合

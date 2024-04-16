@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/MistTrainGirlsPlayer/deps/SFML-2.6.1
+/MistTrainGirlsPlayer/deps/spine-cpp-3.8

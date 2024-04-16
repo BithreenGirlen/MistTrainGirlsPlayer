@@ -3,9 +3,7 @@
 
 #include <memory>
 
-#include <SFML/Graphics.hpp>
-
-#include "deps/spine-sfml-3.8/spine-sfml.h"
+#include "spine-sfml.h"
 
 class CSfmlSpinePlayer
 {
@@ -16,19 +14,18 @@ public:
 	void SetAudios(std::vector<std::string>& filePaths);
 	int Display();
 private:
-	spine::SFMLTextureLoader m_textureLoader;
+	CSfmlTextureLoader m_textureLoader;
 
 	std::vector<std::unique_ptr<spine::Atlas>> m_atlases;
 	std::vector<std::shared_ptr<spine::SkeletonData>> m_skeletonData;
 
 	std::vector<std::string> m_animationNames;
-	std::vector<std::shared_ptr<spine::SkeletonDrawable>> m_drawables;
+	std::vector<std::shared_ptr<CSfmlSpineDrawable>> m_drawables;
 
 	float m_fMaxWidth = 0.f;
 	float m_fMaxHeight = 0.f;
 
 	std::vector<std::string> m_audio_files;
-	std::string m_FolderName;
 
 	void Clear();
 };

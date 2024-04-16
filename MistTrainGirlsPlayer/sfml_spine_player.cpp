@@ -76,32 +76,14 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 	m_fMaxWidth = m_skeletonData.at(0).get()->getWidth();
 	m_fMaxHeight = m_skeletonData.at(0).get()->getHeight();
 
-	const std::vector<std::string> blendScreenList{ "breath", "effe", "ef_", "steam", "smoke", "air_", "yuge", "EF_breath", "emo", "bless", "a3"};
-	const std::vector<std::string> blendMultiplyList{ "face", "cheek" };
-
 	for (size_t i = 0; i < m_skeletonData.size(); ++i)
 	{
-		m_drawables.emplace_back(std::make_shared<spine::SkeletonDrawable>(m_skeletonData.at(i).get()));
+		m_drawables.emplace_back(std::make_shared<CSfmlSpineDrawable>(m_skeletonData.at(i).get()));
 
-		spine::SkeletonDrawable* drawable = m_drawables.back().get();
+		CSfmlSpineDrawable* drawable = m_drawables.back().get();
 		drawable->timeScale = 1.0f;
 		drawable->skeleton->setPosition(m_fMaxWidth / 2, m_fMaxHeight / 2);
 		drawable->skeleton->updateWorldTransform();
-
-		drawable->SetBlendMultiplyList(blendMultiplyList);
-
-		auto& slots = m_skeletonData.at(i).get()->getSlots();
-		for (size_t ii = 0; ii < slots.size(); ++ii)
-		{
-			std::string strName = slots[ii]->getName().buffer();
-			for (const std::string& str : blendScreenList)
-			{
-				if (strncmp(strName.c_str(), str.c_str(), str.size()) == 0)
-				{
-					slots[ii]->setBlendMode(spine::BlendMode::BlendMode_Screen);
-				}
-			}
-		}
 
 		auto& animations = m_skeletonData.at(i).get()->getAnimations();
 		for (size_t ii = 0; ii < animations.size(); ++ii)
@@ -115,12 +97,6 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 		{
 			drawable->state->setAnimation(0, m_animationNames.at(0).c_str(), true);
 		}
-	}
-
-	size_t nPos = strFolderPath.find_last_of("\\/");
-	if (nPos != std::string::npos)
-	{
-		m_FolderName = strFolderPath.substr(nPos + 1);
 	}
 
 	return m_animationNames.size() > 0;
@@ -290,7 +266,7 @@ int CSfmlSpinePlayer::Display()
 						m_drawables.at(i).get()->skeleton->setScaleY(fSkeletonScale > 0.99f ? fSkeletonScale : 1.f);
 					}
 					unsigned int uiWindowWidthMax = static_cast<unsigned int>(m_fMaxWidth * (fSkeletonScale - 0.025f));
-					unsigned int uiWindowHeightMax = static_cast<unsigned int>(m_fMaxWidth * (fSkeletonScale - 0.025f));
+					unsigned int uiWindowHeightMax = static_cast<unsigned int>(m_fMaxHeight * (fSkeletonScale - 0.025f));
 					if (uiWindowWidthMax < sf::VideoMode::getDesktopMode().width || uiWindowHeightMax < sf::VideoMode::getDesktopMode().height)
 					{
 						window.setSize(sf::Vector2u(static_cast<unsigned int>(m_fMaxWidth* fSkeletonScale), static_cast<unsigned int>(m_fMaxHeight* fSkeletonScale)));
@@ -298,6 +274,26 @@ int CSfmlSpinePlayer::Display()
 				}
 				break;
 			case sf::Event::KeyReleased:
+				switch (event.key.code)
+				{
+				case sf::Keyboard::Key::A:
+					for (size_t i = 0; i < m_drawables.size(); ++i)
+					{
+						m_drawables.at(i).get()->SwitchPma();
+					}
+					break;
+				case sf::Keyboard::Key::Escape:
+					window.close();
+					break;
+				case sf::Keyboard::Key::Up:
+					iRet = 2;
+					window.close();
+					break;
+				case sf::Keyboard::Key::Down:
+					iRet = 1;
+					window.close();
+					break;
+				}
 				if (event.key.code == sf::Keyboard::Key::Escape)
 				{
 					window.close();
@@ -322,7 +318,7 @@ int CSfmlSpinePlayer::Display()
 		window.clear();
 		for (size_t i = 0; i < m_drawables.size(); ++i)
 		{
-			m_drawables.at(i).get()->update(delta);
+			m_drawables.at(i).get()->Update(delta);
 			window.draw(*m_drawables.at(i).get(), sf::RenderStates(sf::BlendAlpha));
 		}
 

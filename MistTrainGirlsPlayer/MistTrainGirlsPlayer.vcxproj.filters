@@ -16,34 +16,13 @@
     <Filter Include="ソース ファイル\deps">
       <UniqueIdentifier>{c324bd5e-557e-4448-9154-8b01dab17040}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\deps">
-      <UniqueIdentifier>{9da96cd6-31f4-40ba-9ef1-c767a52605ad}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\deps\spine-sfml-3.8">
-      <UniqueIdentifier>{fed6d7f0-2a44-4fbf-b8d9-5dcfbc7e4859}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\deps\spine-cpp-3.8">
       <UniqueIdentifier>{2f3a6e38-37c4-4cb5-a84d-0a12b01a095d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\deps\spine-sfml-3.8">
-      <UniqueIdentifier>{2dce5ca7-8b5b-4f24-a0e0-67190c51844d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
       <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MistTrainGirlsPlayer.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="deps\spine-sfml-3.8\spine-sfml.h">
-      <Filter>ヘッダー ファイル\deps\spine-sfml-3.8</Filter>
     </ClInclude>
     <ClInclude Include="win_filesystem.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -57,9 +36,12 @@
     <ClInclude Include="win_text.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="spine-sfml.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MistTrainGirlsPlayer.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="deps\spine-cpp-3.8\src\spine\Animation.cpp">
@@ -245,9 +227,6 @@
     <ClCompile Include="deps\spine-cpp-3.8\src\spine\VertexEffect.cpp">
       <Filter>ソース ファイル\deps\spine-cpp-3.8</Filter>
     </ClCompile>
-    <ClCompile Include="deps\spine-sfml-3.8\spine-sfml.cpp">
-      <Filter>ソース ファイル\deps\spine-sfml-3.8</Filter>
-    </ClCompile>
     <ClCompile Include="win_filesystem.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -260,10 +239,8 @@
     <ClCompile Include="win_text.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="MistTrainGirlsPlayer.rc">
-      <Filter>リソース ファイル</Filter>
-    </ResourceCompile>
+    <ClCompile Include="spine-sfml.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,8 @@
 
 namespace spine
 {
-	SpineExtension* getDefaultExtension() {
+	SpineExtension* getDefaultExtension()
+	{
 		return new DefaultSpineExtension();
 	}
 }
@@ -209,7 +210,7 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 			break;
 		case spine::BlendMode_Screen:
 			sfmlBlendMode.colorSrcFactor = sf::BlendMode::Factor::One;
-			sfmlBlendMode.colorDstFactor = sf::BlendMode::Factor::OneMinusSrcAlpha;
+			sfmlBlendMode.colorDstFactor = sf::BlendMode::Factor::OneMinusSrcColor;
 			sfmlBlendMode.colorEquation = sf::BlendMode::Equation::Add;
 			sfmlBlendMode.alphaSrcFactor = sf::BlendMode::Factor::OneMinusSrcColor;
 			sfmlBlendMode.alphaDstFactor = sf::BlendMode::Factor::OneMinusSrcColor;
@@ -255,16 +256,23 @@ bool CSfmlSpineDrawable::IsToBeLeftOut(const spine::String &slotName) const
 
 void CSfmlTextureLoader::load(spine::AtlasPage& page, const spine::String& path) {
 	sf::Texture* texture = new sf::Texture();
-	if (!texture->loadFromFile(path.buffer())) return;
+	if (!texture->loadFromFile(path.buffer()))
+	{
+		delete texture;
+		return;
+	}
 
 	if (page.magFilter == spine::TextureFilter_Linear) texture->setSmooth(true);
 	if (page.uWrap == spine::TextureWrap_Repeat && page.vWrap == spine::TextureWrap_Repeat) texture->setRepeated(true);
 
 	page.setRendererObject(texture);
 	/*In case atlas size does not coincide with that of png, overwriting will collapse the layout.*/
-	//sf::Vector2u size = texture->getSize();
-	//page.width = size.x;
-	//page.height = size.y;
+	if (page.width == 0 && page.height == 0)
+	{
+		sf::Vector2u size = texture->getSize();
+		page.width = size.x;
+		page.height = size.y;
+	}
 }
 
 void CSfmlTextureLoader::unload(void* texture)

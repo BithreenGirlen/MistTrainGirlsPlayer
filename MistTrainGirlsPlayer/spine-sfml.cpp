@@ -190,7 +190,10 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 		}
 
 		sf::BlendMode sfmlBlendMode;
-		switch (slot.getData().getBlendMode())
+
+		spine::BlendMode spineBlnedMode = slot.getData().getBlendMode();
+		if (m_bForceBlendModeNormal)spineBlnedMode = spine::BlendMode_Normal;
+		switch (spineBlnedMode)
 		{
 		case spine::BlendMode_Additive:
 			sfmlBlendMode.colorSrcFactor = m_bAlphaPremultiplied ? sf::BlendMode::Factor::One : sf::BlendMode::Factor::SrcAlpha;

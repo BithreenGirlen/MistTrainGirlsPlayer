@@ -18,19 +18,21 @@ public:
 	/*virtual function from sf::Drawable*/
 	virtual void draw(sf::RenderTarget& renderTarget, sf::RenderStates renderStates) const;
 	void SwitchPma()const { m_bAlphaPremultiplied ^= true; };
+	void SwitchBlendModeAdoption() { m_bForceBlendModeNormal ^= true; }
+
 	void SetLeaveOutList(const std::vector<std::string>& list);
 private:
 	mutable bool m_bHasOwnAnimationStateData = false;
 	mutable bool m_bAlphaPremultiplied = true;
+	bool m_bForceBlendModeNormal = false;
 
 	mutable spine::Vector<float> m_worldVertices;
 
 	mutable sf::VertexArray sfmlVertices;
 	/*SFML does not have indices.*/
+	mutable spine::Vector<unsigned short> m_quadIndices;
 
 	mutable spine::SkeletonClipping m_clipper;
-
-	mutable spine::Vector<unsigned short> m_quadIndices;
 	
 	mutable spine::Vector<spine::String> m_leaveOutList;
 	bool IsToBeLeftOut(const spine::String &slotName) const;

@@ -50,6 +50,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     std::wstring wstrPickedFolder = win_dialogue::SelectWorkFolder(nullptr);
     if (!wstrPickedFolder.empty())
     {
+        CSfmlSpinePlayer SfmlPlayer;
+        SfmlPlayer.SetFont("C:\\Windows\\Fonts\\yumindb.ttf", true, true);
+
         std::vector<std::wstring> folders;
         size_t nFolderIndex = 0;
         win_filesystem::GetFolderListAndIndex(wstrPickedFolder, folders, &nFolderIndex);
@@ -63,27 +66,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             std::vector<std::string> audioFilePaths;
             GetAudioFileList(wstrFolderPath, audioFilePaths);
 
-            CSfmlSpinePlayer SfmlPlayer;
             bool bRet = SfmlPlayer.SetSpines(win_text::NarrowUtf8(wstrFolderPath), names);
-            if (bRet)
-            {
-                SfmlPlayer.SetAudios(audioFilePaths);
+            if (!bRet)break;
 
-                int iRet = SfmlPlayer.Display();
-                if (iRet == 1)
-                {
-                    ++nFolderIndex;
-                    if (nFolderIndex > folders.size() - 1)nFolderIndex = 0;
-                }
-                else if (iRet == 2)
-                {
-                    --nFolderIndex;
-                    if (nFolderIndex > folders.size() - 1)nFolderIndex = folders.size() - 1;
-                }
-                else
-                {
-                    break;
-                }
+            SfmlPlayer.SetAudios(audioFilePaths);
+
+            int iRet = SfmlPlayer.Display();
+            if (iRet == 1)
+            {
+                ++nFolderIndex;
+                if (nFolderIndex > folders.size() - 1)nFolderIndex = 0;
+            }
+            else if (iRet == 2)
+            {
+                --nFolderIndex;
+                if (nFolderIndex > folders.size() - 1)nFolderIndex = folders.size() - 1;
             }
             else
             {

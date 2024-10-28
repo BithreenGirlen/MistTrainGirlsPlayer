@@ -104,7 +104,24 @@ bool CSfmlSpinePlayer::SetSpines(const std::string& strFolderPath, const std::ve
 /*音声ファイル設定*/
 void CSfmlSpinePlayer::SetAudios(std::vector<std::string>& filePaths)
 {
-	m_audio_files = filePaths;
+	m_audio_files = std::move(filePaths);
+	m_nAudioIndex = 0;
+}
+bool CSfmlSpinePlayer::SetFont(const std::string& strFilePath, bool bBold, bool bItalic)
+{
+	bool bRet = m_trackFont.loadFromFile(strFilePath);
+	if (!bRet)return false;
+
+	constexpr float fOutLineThickness = 2.4f;
+
+	/*Audio track indicator*/
+	m_trackText.setFont(m_trackFont);
+	m_trackText.setFillColor(sf::Color::Black);
+	m_trackText.setStyle((bBold ? sf::Text::Style::Bold : 0) | (bItalic ? sf::Text::Style::Italic : 0));
+	m_trackText.setOutlineThickness(fOutLineThickness);
+	m_trackText.setOutlineColor(sf::Color::White);
+
+	return true;
 }
 /*ウィンドウ表示*/
 int CSfmlSpinePlayer::Display()
@@ -120,16 +137,54 @@ int CSfmlSpinePlayer::Display()
 	bool bOnWindowMove = false;
 	bool bSpeedHavingChanged = false;
 
-	size_t nAudioIndex = 0;
 	sf::SoundBuffer soundBuffer;
 	sf::Sound sound;
 	if (!m_audio_files.empty())
 	{
-		soundBuffer.loadFromFile(m_audio_files.at(0));
+		soundBuffer.loadFromFile(m_audio_files[0]);
 		sound.setBuffer(soundBuffer);
 		sound.setVolume(50.f);
 		sound.play();
 	}
+
+	/*修正が面倒なのでここで記述*/
+	const auto UpdateTrackIndicator = [this]()
+		-> void
+		{
+			if (m_nAudioIndex >= m_audio_files.size())
+			{
+				m_trackText.setString("");
+				return;
+			}
+
+			std::string str = std::to_string(m_nAudioIndex + 1) + "/" + std::to_string(m_audio_files.size());
+			m_trackText.setString(str);
+		};
+
+	const auto StepOnTrack = [this, &soundBuffer, &sound, &UpdateTrackIndicator](bool bForward)
+		-> void
+		{
+			if (!m_audio_files.empty())
+			{
+				if (bForward)
+				{
+					++m_nAudioIndex;
+					if (m_nAudioIndex >= m_audio_files.size())m_nAudioIndex = 0;
+				}
+				else
+				{
+					--m_nAudioIndex;
+					if (m_nAudioIndex >= m_audio_files.size())m_nAudioIndex = m_audio_files.size() - 1;
+				}
+				soundBuffer.loadFromFile(m_audio_files.at(m_nAudioIndex));
+				sound.setBuffer(soundBuffer);
+				sound.play();
+
+				UpdateTrackIndicator();
+			}
+		};
+
+	UpdateTrackIndicator();
 
 	int iRet = 0;
 	sf::RenderWindow window(sf::VideoMode(static_cast<unsigned int>(m_fMaxWidth), static_cast<unsigned int>(m_fMaxHeight)), "MistTrainGirls spine player", sf::Style::None);
@@ -173,7 +228,7 @@ int CSfmlSpinePlayer::Display()
 
 					if (iX == 0 && iY == 0)
 					{
-						/*場面移行*/
+						/*動作移行*/
 						++nAnimationIndex;
 						if (nAnimationIndex > m_animationNames.size() - 1)nAnimationIndex = 0;
 						for (size_t i = 0; i < m_drawables.size(); ++i)
@@ -188,7 +243,7 @@ int CSfmlSpinePlayer::Display()
 						iOffset.y += iY;
 						for (size_t i = 0; i < m_drawables.size(); ++i)
 						{
-							m_drawables.at(i).get()->skeleton->setPosition((m_fMaxWidth - iOffset.x) / 2, (m_fMaxHeight - iOffset.y) / 2);
+							m_drawables.at(i).get()->skeleton->setPosition(m_fMaxWidth / 2 - iOffset.x, m_fMaxHeight / 2 - iOffset.y);
 						}
 					}
 				}
@@ -231,22 +286,7 @@ int CSfmlSpinePlayer::Display()
 				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
 					/*音声送り・戻し*/
-					if (!m_audio_files.empty())
-					{
-						if (event.mouseWheelScroll.delta < 0)
-						{
-							++nAudioIndex;
-							if (nAudioIndex >= m_audio_files.size())nAudioIndex = 0;
-						}
-						else
-						{
-							--nAudioIndex;
-							if (nAudioIndex >= m_audio_files.size())nAudioIndex = m_audio_files.size() - 1;
-						}
-						soundBuffer.loadFromFile(m_audio_files.at(nAudioIndex));
-						sound.setBuffer(soundBuffer);
-						sound.play();
-					}
+					StepOnTrack(event.mouseWheelScroll.delta < 0);
 				}
 				else
 				{
@@ -281,6 +321,18 @@ int CSfmlSpinePlayer::Display()
 					{
 						m_drawables.at(i).get()->SwitchPma();
 					}
+					break;
+				case sf::Keyboard::Key::B:
+					for (size_t i = 0; i < m_drawables.size(); ++i)
+					{
+						m_drawables.at(i).get()->SwitchBlendModeAdoption();
+					}
+					break;
+				case sf::Keyboard::Key::C:
+					SwitchTextColor();
+					break;
+				case sf::Keyboard::Key::T:
+					m_bTrackHidden ^= true;
 					break;
 				case sf::Keyboard::Key::Escape:
 					window.close();
@@ -322,18 +374,20 @@ int CSfmlSpinePlayer::Display()
 			window.draw(*m_drawables.at(i).get(), sf::RenderStates(sf::BlendAlpha));
 		}
 
+		if (!m_bTrackHidden)
+		{
+			window.draw(m_trackText);
+		}
+
 		window.display();
 
 		if (!m_audio_files.empty())
 		{
 			if (sound.getStatus() == sf::SoundSource::Stopped)
 			{
-				if (nAudioIndex < m_audio_files.size() - 1)
+				if (m_nAudioIndex < m_audio_files.size() - 1)
 				{
-					++nAudioIndex;
-					soundBuffer.loadFromFile(m_audio_files.at(nAudioIndex));
-					sound.setBuffer(soundBuffer);
-					sound.play();
+					StepOnTrack(true);
 				}
 			}
 		}
@@ -347,10 +401,17 @@ int CSfmlSpinePlayer::Display()
 	}
 	return iRet;
 }
+
+void CSfmlSpinePlayer::SwitchTextColor()
+{
+	m_trackText.setFillColor(m_trackText.getFillColor() == sf::Color::Black ? sf::Color::White : sf::Color::Black);
+	m_trackText.setOutlineColor(m_trackText.getFillColor() == sf::Color::Black ? sf::Color::White : sf::Color::Black);
+}
 /*消去*/
 void CSfmlSpinePlayer::Clear()
 {
 	m_atlases.clear();
 	m_skeletonData.clear();
+	m_drawables.clear();
 	m_animationNames.clear();
 }

@@ -2,6 +2,8 @@
 
 #include "framework.h"
 
+#include <locale.h>
+
 #include "win_dialogue.h"
 #include "win_filesystem.h"
 #include "win_text.h"
@@ -11,6 +13,8 @@
 
 void GetSpineNameList(const std::wstring &wstrFolderPath, std::vector<std::string>& names)
 {
+    setlocale(LC_ALL, ".utf8");
+
     std::vector<std::wstring> filePaths;
     win_filesystem::CreateFilePathList(wstrFolderPath.c_str(), L".atlas", filePaths);
 
@@ -55,7 +59,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         std::vector<std::wstring> folders;
         size_t nFolderIndex = 0;
-        win_filesystem::GetFolderListAndIndex(wstrPickedFolder, folders, &nFolderIndex);
+        win_filesystem::GetFilePathListAndIndex(wstrPickedFolder, nullptr, folders, &nFolderIndex);
         for (;;)
         {
             std::wstring wstrFolderPath = folders.at(nFolderIndex);

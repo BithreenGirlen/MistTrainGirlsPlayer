@@ -15,6 +15,8 @@ public:
 	bool SetFont(const std::string& strFilePath, bool bBold, bool bItalic);
 	int Display();
 private:
+	enum Constants { kBaseWidth = 1280, kBaseHeight = 720 };
+
 	CSfmlTextureLoader m_textureLoader;
 
 	std::vector<std::unique_ptr<spine::Atlas>> m_atlases;
@@ -23,8 +25,13 @@ private:
 
 	std::vector<std::string> m_animationNames;
 
-	float m_fMaxWidth = 0.f;
-	float m_fMaxHeight = 0.f;
+	float m_fDefaultScale = 1.f;
+	float m_fThresholdScale = 1.f;
+
+	sf::Vector2f m_fBaseSize = { kBaseWidth, kBaseHeight };
+	float m_fSkeletonScale = 1.f;
+
+	void WorkOutDefaultScale();
 
 	std::vector<std::string> m_audio_files;
 	size_t m_nAudioIndex = 0;

@@ -54,20 +54,25 @@ Resource
 │  └ ...
 └ ...
 </pre>
-## 函式庫
+## 外部ライブラリ
 - [SFML-2.6.1](https://www.sfml-dev.org/download/sfml/2.6.1/)
 - [spine-cpp-3.8](https://github.com/EsotericSoftware/spine-runtimes/tree/3.8)
 
-`deps/CMakeLists.txt`を実行することで取得できます。或いは手動で所定の箇所に補って下さい。
+## 構築
+
+1. `deps/CMakeLists.txt`を実行
+2. `MistTrainGirlsPlayer.sln`を開く
+
+`deps`階層は以下のような構造になります。
 <pre>
 deps
-├ SFML-2.6.1 // 上記リンクから取得
+├ SFML-2.6.1 // VC17-x64用SFML
 │  ├ include
 │  │  └ SFML
 │  │    └ ...
 │  └ lib
 │    └ ...
-└ spine-cpp-3.8 // 上記リンクから取得
+└ spine-cpp-3.8 // Spine汎用ランタイム
    ├ include
    │  └ spine
    │    └ ...

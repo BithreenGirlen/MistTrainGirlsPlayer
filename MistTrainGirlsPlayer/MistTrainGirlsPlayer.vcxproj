@@ -57,6 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/d1trimfile:"$(ProjectDir)deps\\" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -71,19 +72,24 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/d1trimfile:"$(ProjectDir)deps\\" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/pdbaltpath:%_PDB% %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="sfml_spine_player.h" />
-    <ClInclude Include="spine-sfml.h" />
+    <ClInclude Include="sfml-spine\sfml_spine.h" />
+    <ClInclude Include="sfml-spine\sfml_spine_player.h" />
+    <ClInclude Include="sfml-spine\spine_loader.h" />
+    <ClInclude Include="sfml-spine\spine_player.h" />
+    <ClInclude Include="sfml_main_window.h" />
     <ClInclude Include="win_dialogue.h" />
     <ClInclude Include="win_filesystem.h" />
     <ClInclude Include="win_text.h" />
@@ -151,8 +157,11 @@
     <ClCompile Include="deps\spine-cpp-3.8\src\spine\VertexAttachment.cpp" />
     <ClCompile Include="deps\spine-cpp-3.8\src\spine\VertexEffect.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="sfml_spine_player.cpp" />
-    <ClCompile Include="spine-sfml.cpp" />
+    <ClCompile Include="sfml-spine\sfml_spine.cpp" />
+    <ClCompile Include="sfml-spine\sfml_spine_player.cpp" />
+    <ClCompile Include="sfml-spine\spine_loader.cpp" />
+    <ClCompile Include="sfml-spine\spine_player.cpp" />
+    <ClCompile Include="sfml_main_window.cpp" />
     <ClCompile Include="win_dialogue.cpp" />
     <ClCompile Include="win_filesystem.cpp" />
     <ClCompile Include="win_text.cpp" />

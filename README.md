@@ -1,11 +1,14 @@
 # MistTrainGirlsPlayer
+
 某ゲームのアレのシーンを再生します。
 
 ## 動作要件
+
 - Windows 10 以降のWindows OS
 - MSVC 2015-2022 (x64)
 
 ## 再生方法
+
 フォルダ選択ダイアログから次のようなフォルダを開くと再生を開始します。
 <pre>
 29340107
@@ -15,31 +18,37 @@
 ├ 2m.atlas
 ├ 2m.png
 ├ 2m.skel
+├ 3.atlas
+├ 3.png
+├ 3.skel
 ├ ...
 ├ s_29340107_001.mp3
 └ ...
 </pre>
+
 ## マウス操作
-| 入力  | 機能  |
+| 入力 | 機能 |
 | --- | --- |
-| マウスホイール | 拡大・縮小。 |
+| マウスホイール | 窓の拡大・縮小。`Ctrl`を押しながらで寄り・引き。 |
 | 左ボタン + マウスホイール | 動作加速・減速。 |
 | 左ボタンクリック | 動作移行。 |
 | 左ボタンドラッグ | 視点移動。 |
 | 中ボタン | 拡縮・速度・視点初期化。 |
 | 右ボタン + マウスホイール | 音声送り・戻し。 |
 | 右ボタン + 左ボタンクリック | 窓移動。 |
-## キー操作
-| 入力  | 機能  |
-| --- | --- |
-| Esc | 終了。 |
-| Up | 前のフォルダに移動。 |
-| Down | 次のフォルダに移動。 |
-| A | 乗算済アルファ有効・無効切り替え。 |
-| B | 指定混成法無視/尊重切り替え。 |
-| T | 再生音声トラック番号表示・非表示切り替え。 |
 
-例えば次の階層構造にて`26430105`を再生していた場合、キー入力で`26420105`や`26430205`に移動できます。
+## キー操作
+
+| 入力 | 機能 |
+| --- | --- |
+| <kbd>Esc</kbd> | 終了。 |
+| <kbd>↑</kbd> | 前のフォルダに移動。 |
+| <kbd>↓</kbd> | 次のフォルダに移動。 |
+| <kbd>→</kbd> | 音声送り。 |
+| <kbd>←</kbd> | 音声戻し。 |
+| <kbd>T</kbd> | 音声トラック番号表示・非表示切り替え。 |
+
+- 例えば次の階層構造にて`26430105`を再生していた場合、キー入力で`26420105`や`26430205`に移動できます。
 <pre>
 Resource
 ├ ...
@@ -54,16 +63,32 @@ Resource
 │  └ ...
 └ ...
 </pre>
+
+- 以下の割り当てもありますが、恐らく不要です。
+
+| 入力 | 機能 |
+| --- | --- |
+| <kbd>A</kbd> | 乗算済アルファ有効・無効切り替え。 |
+| <kbd>B</kbd> | 指定混成法無視/尊重切り替え。 |
+
 ## 外部ライブラリ
+
 - [SFML-2.6.1](https://www.sfml-dev.org/download/sfml/2.6.1/)
 - [spine-cpp-3.8](https://github.com/EsotericSoftware/spine-runtimes/tree/3.8)
 
 ## 構築
 
-1. `deps/CMakeLists.txt`を実行
-2. `MistTrainGirlsPlayer.sln`を開く
+Visual Studioが必要になります。
+1. `MistTrainGirlsPlayer/deps`階層をファイルエクスプローラで開く。
+2. 階層表示欄に`cmd`と入力
+     - コマンドプロンプトが起動します。
+3. コマンドプロンプト上で`start devenv .`と入力。
+     - Visual Studioが起動し、CMakeの設定を開始します。
+4. 設定完了後、`MistTrainGirlsPlayer.sln`を開いてビルドして下さい。
+     - ビルド成功後にはCMakeの生成ファイルは不要になるので`deps`階層下の`out`フォルダと`.vs`フォルダは手動で削除して下さい。
 
-`deps`階層は以下のような構造になります。
+<details><summary>出来上がるdeps階層の構成</summary>
+
 <pre>
 deps
 ├ SFML-2.6.1 // VC17-x64用SFML
@@ -80,26 +105,5 @@ deps
       └ spine
         └ ...
 </pre>
-## 補足説明
 
-### 視点
-背景に合わせているので、ゲーム中の表示より遠のいています。拡縮で調整して下さい。
-
-### 描画処理
-公式の実行時環境`spine-sfml.cpp`ではPMA処理に問題があったので、`v0.6`からは大きく変更しました。  
-乗算済アルファ有効時には原色に透過度を乗算するようにしています。
-``` cpp
-for (int ii = 0; ii < indicesCount; ++ii)
-{
-	sf::Vertex sfmlVertex;
-	sfmlVertex.position.x = (*pVertices)[(*pIndices)[ii] * 2LL];
-	sfmlVertex.position.y = (*pVertices)[(*pIndices)[ii] * 2LL + 1];
-	sfmlVertex.color.r = (sf::Uint8)(tint.r * 255.f * (m_bAlphaPremultiplied ? tint.a : 1.f));
-	sfmlVertex.color.g = (sf::Uint8)(tint.g * 255.f * (m_bAlphaPremultiplied ? tint.a : 1.f));
-	sfmlVertex.color.b = (sf::Uint8)(tint.b * 255.f * (m_bAlphaPremultiplied ? tint.a : 1.f));
-	sfmlVertex.color.a = (sf::Uint8)(tint.a * 255.f);
-	sfmlVertex.texCoords.x = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL] * sfmlSize.x;
-	sfmlVertex.texCoords.y = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL + 1] * sfmlSize.y;
-	sfmlVertices.append(sfmlVertex);
-}
-```
+</details>

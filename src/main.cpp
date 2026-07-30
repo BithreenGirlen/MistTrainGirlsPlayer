@@ -1,7 +1,9 @@
 ﻿
 
-#include "framework.h"
-#include "resource/resource.h"
+#include <SDKDDKVer.h>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 
 #include <locale.h>
 

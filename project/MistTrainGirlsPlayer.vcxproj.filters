@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\framework.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\win_filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -55,6 +52,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\resource.h">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
       <Filter>Resource</Filter>
     </ClInclude>
   </ItemGroup>
@@ -268,6 +268,9 @@
     </ClCompile>
     <ClCompile Include="..\src\sfml_main_window.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Resource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 ﻿
 
 #include "framework.h"
-#include "resource.h"
+#include "resource/resource.h"
 
 #include <locale.h>
 

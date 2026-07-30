@@ -33,7 +33,7 @@ namespace mstr
 	static void GetSpineNameList(const std::wstring& wstrFolderPath, std::vector<std::string>& names)
 	{
 		std::vector<std::wstring> filePaths;
-		win_filesystem::CreateFilePathList(wstrFolderPath.c_str(), L".atlas", filePaths);
+		win_filesystem::CreateFilePathList(wstrFolderPath, L".atlas", filePaths);
 
 		for (const std::wstring& filePath : filePaths)
 		{
@@ -52,7 +52,7 @@ namespace mstr
 	static void GetAudioFileList(const std::wstring& wstrFolderPath, std::vector<std::string>& audioFilePaths)
 	{
 		std::vector<std::wstring> filePaths;
-		win_filesystem::CreateFilePathList(wstrFolderPath.c_str(), L".mp3", filePaths);
+		win_filesystem::CreateFilePathList(wstrFolderPath, L".mp3", filePaths);
 
 		for (const std::wstring& filePath : filePaths)
 		{
@@ -62,9 +62,9 @@ namespace mstr
 
 	static unsigned long GetDisplayRefreshRate()
 	{
-		DEVMODE sDevMode{};
-		::EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &sDevMode);
-		return sDevMode.dmDisplayFrequency;
+		DEVMODE devMode{};
+		::EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode);
+		return devMode.dmDisplayFrequency;
 	}
 
 	extern "C"
@@ -84,19 +84,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	::setlocale(LC_ALL, ".utf8");
 	CSfmlMainWindow mainWindow(L"MistTrainGirls spine player");
-	
-	std::wstring wstrPickedFolder = win_dialogue::SelectWorkFolder(mainWindow.GetWindow()->getSystemHandle());
+
+	std::wstring wstrPickedFolder = win_dialogue::SelectFolder(nullptr, mainWindow.GetWindow()->getSystemHandle());
 	if (!wstrPickedFolder.empty())
 	{
 		mainWindow.SetFont("C:\\Windows\\Fonts\\yumindb.ttf", true, true);
 		mainWindow.GetWindow()->setFramerateLimit(mstr::GetDisplayRefreshRate());
 
-		std::vector<std::wstring> folders;
+		std::vector<std::wstring> folderPaths;
 		size_t nFolderIndex = 0;
-		win_filesystem::GetFilePathListAndIndex(wstrPickedFolder, nullptr, folders, &nFolderIndex);
+		win_filesystem::GetFilePathListAndIndex(wstrPickedFolder, nullptr, folderPaths, &nFolderIndex);
 		for (;;)
 		{
-			std::wstring wstrFolderPath = folders[nFolderIndex];
+			const std::wstring& wstrFolderPath = folderPaths[nFolderIndex];
 
 			std::vector<std::string> names;
 			mstr::GetSpineNameList(wstrFolderPath, names);
@@ -111,12 +111,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			if (iRet == 1)
 			{
 				++nFolderIndex;
-				if (nFolderIndex > folders.size() - 1)nFolderIndex = 0;
+				if (nFolderIndex > folderPaths.size() - 1)nFolderIndex = 0;
 			}
 			else if (iRet == 2)
 			{
 				--nFolderIndex;
-				if (nFolderIndex > folders.size() - 1)nFolderIndex = folders.size() - 1;
+				if (nFolderIndex > folderPaths.size() - 1)nFolderIndex = folderPaths.size() - 1;
 			}
 			else
 			{

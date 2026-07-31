@@ -1,4 +1,7 @@
 ﻿
+#if defined(_WIN32)
+	#include <Windows.h> /* To retrieve monitor information. */
+#endif
 
 #include <SFML/Audio.hpp>
 
@@ -7,8 +10,7 @@
 CSfmlMainWindow::CSfmlMainWindow(const wchar_t* windowName)
 {
 	m_window = std::make_unique<sf::RenderWindow>(sf::VideoMode(1280, 720), windowName, sf::Style::None);
-
-	m_window->setPosition(sf::Vector2i(0, 0));
+	alignWindowToTheTopLeftOfMonitor();
 
 	m_sfmlSpinePlayer = std::make_unique<CSfmlSpinePlayer>();
 }
@@ -34,7 +36,7 @@ bool CSfmlMainWindow::setSpines(const std::string& folderPath, const std::vector
 
 void CSfmlMainWindow::setVoices(std::vector<std::string>& filePaths)
 {
-	m_audio_files = std::move(filePaths);
+	m_audioFiles = std::move(filePaths);
 	m_nAudioIndex = 0;
 }
 /*書体設定*/
@@ -50,9 +52,9 @@ bool CSfmlMainWindow::setFont(const std::string& filePath, bool bold, bool itali
 #else
 	if (!bRet)return false;
 #endif
-	constexpr float fOutLineThickness = 2.4f;
+	static constexpr float fOutLineThickness = 2.4f;
 
-	/*Audio track indicator*/
+	/* Audio track indicator */
 	m_trackText.setFont(m_trackFont);
 	m_trackText.setFillColor(sf::Color::Black);
 	m_trackText.setStyle((bold ? sf::Text::Style::Bold : 0) | (italic ? sf::Text::Style::Italic : 0));
@@ -64,13 +66,13 @@ bool CSfmlMainWindow::setFont(const std::string& filePath, bool bold, bool itali
 
 int CSfmlMainWindow::display()
 {
-	resetScale();
+	resetSpinePlayerScale();
 
 	sf::SoundBuffer soundBuffer;
 	sf::Sound sound;
-	if (!m_audio_files.empty())
+	if (!m_audioFiles.empty())
 	{
-		soundBuffer.loadFromFile(m_audio_files[0]);
+		soundBuffer.loadFromFile(m_audioFiles[0]);
 		sound.setBuffer(soundBuffer);
 		sound.setVolume(50.f);
 		sound.play();
@@ -80,32 +82,32 @@ int CSfmlMainWindow::display()
 	const auto UpdateTrackIndicator = [this]()
 		-> void
 		{
-			if (m_nAudioIndex >= m_audio_files.size())
+			if (m_nAudioIndex >= m_audioFiles.size())
 			{
 				m_trackText.setString("");
 				return;
 			}
 
-			std::string str = std::to_string(m_nAudioIndex + 1).append("/").append(std::to_string(m_audio_files.size()));
+			std::string str = std::to_string(m_nAudioIndex + 1).append("/").append(std::to_string(m_audioFiles.size()));
 			m_trackText.setString(str);
 		};
 
 	const auto StepOnTrack = [this, &soundBuffer, &sound, &UpdateTrackIndicator](bool bForward)
 		-> void
 		{
-			if (!m_audio_files.empty())
+			if (!m_audioFiles.empty())
 			{
 				if (bForward)
 				{
 					++m_nAudioIndex;
-					if (m_nAudioIndex >= m_audio_files.size())m_nAudioIndex = 0;
+					if (m_nAudioIndex >= m_audioFiles.size())m_nAudioIndex = 0;
 				}
 				else
 				{
 					--m_nAudioIndex;
-					if (m_nAudioIndex >= m_audio_files.size())m_nAudioIndex = m_audio_files.size() - 1;
+					if (m_nAudioIndex >= m_audioFiles.size())m_nAudioIndex = m_audioFiles.size() - 1;
 				}
-				soundBuffer.loadFromFile(m_audio_files.at(m_nAudioIndex));
+				soundBuffer.loadFromFile(m_audioFiles.at(m_nAudioIndex));
 				sound.setBuffer(soundBuffer);
 				sound.play();
 
@@ -114,12 +116,6 @@ int CSfmlMainWindow::display()
 		};
 
 	UpdateTrackIndicator();
-
-	sf::Vector2i iMouseStartPos;
-
-	bool bOnWindowMove = false;
-	bool bLeftDowned = false;
-	bool bLeftCombinated = false;
 
 	m_spineClock.restart();
 	while (m_window->isOpen())
@@ -135,56 +131,61 @@ int CSfmlMainWindow::display()
 			case sf::Event::MouseButtonPressed:
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
-					iMouseStartPos.x = event.mouseButton.x;
-					iMouseStartPos.y = event.mouseButton.y;
+					m_mouseState.lastMousePos.x = event.mouseButton.x;
+					m_mouseState.lastMousePos.y = event.mouseButton.y;
 
-					bLeftDowned = true;
+					m_mouseState.wasLeftPressed = true;
 				}
 				break;
 			case sf::Event::MouseButtonReleased:
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
-					if (bLeftCombinated)
+					if (m_mouseState.wasLeftCombined || m_mouseState.wasLeftDragged)
 					{
-						bLeftCombinated = false;
-						bLeftDowned = false;
+						m_mouseState.wasLeftCombined = false;
+						m_mouseState.wasLeftPressed = false;
+						m_mouseState.wasLeftDragged = false;
+
 						break;
 					}
 
-					if (bOnWindowMove || sf::Mouse::isButtonPressed(sf::Mouse::Right))
+					if (m_windowState.toBeMoved || sf::Mouse::isButtonPressed(sf::Mouse::Right))
 					{
-						bOnWindowMove ^= true;
+						m_windowState.toBeMoved ^= true;
 						break;
 					}
 
-					int iX = iMouseStartPos.x - event.mouseButton.x;
-					int iY = iMouseStartPos.y - event.mouseButton.y;
+					const int iX = m_mouseState.lastMousePos.x - event.mouseButton.x;
+					const int iY = m_mouseState.lastMousePos.y - event.mouseButton.y;
 
-					if (bLeftDowned && iX == 0 && iY == 0)
+					if (m_mouseState.wasLeftPressed && iX == 0 && iY == 0)
 					{
 						m_sfmlSpinePlayer->shiftAnimation();
 					}
 
-					bLeftDowned = false;
+					m_mouseState.wasLeftPressed = false;
 				}
 				if (event.mouseButton.button == sf::Mouse::Middle)
 				{
-					resetScale();
+					resetSpinePlayerScale();
 				}
 				break;
 			case sf::Event::MouseMoved:
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					if (bLeftDowned)
+					if (!m_mouseState.wasLeftCombined)
 					{
-						int iX = iMouseStartPos.x - event.mouseMove.x;
-						int iY = iMouseStartPos.y - event.mouseMove.y;
-						m_sfmlSpinePlayer->addOffset(iX, iY);
+						if (m_mouseState.wasLeftDragged)
+						{
+							int iX = m_mouseState.lastMousePos.x - event.mouseMove.x;
+							int iY = m_mouseState.lastMousePos.y - event.mouseMove.y;
+							m_sfmlSpinePlayer->addOffset(iX, iY);
+						}
 
-						iMouseStartPos.x = event.mouseMove.x;
-						iMouseStartPos.y = event.mouseMove.y;
+						m_mouseState.lastMousePos.x = event.mouseMove.x;
+						m_mouseState.lastMousePos.y = event.mouseMove.y;
 
-						bLeftCombinated = true;
+						m_mouseState.wasLeftDragged = true;
 					}
 				}
 				break;
@@ -198,7 +199,7 @@ int CSfmlMainWindow::display()
 					timeScale = (std::max)(timeScale, 0.f);
 					m_sfmlSpinePlayer->setTimeScale(timeScale);
 
-					bLeftCombinated = true;
+					m_mouseState.wasLeftCombined = true;
 				}
 				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
@@ -247,6 +248,14 @@ int CSfmlMainWindow::display()
 				case sf::Keyboard::Key::C:
 					toggleTextColour();
 					break;
+				case sf::Keyboard::Key::F:
+					if (!m_windowState.toBeMoved)
+					{
+						m_windowStyle.toFitToMonitorHeight ^= true;
+						alignWindowToTheTopLeftOfMonitor();
+						resetSpinePlayerScale();
+					}
+					break;
 				case sf::Keyboard::Key::T:
 					toggleTextVisibility();
 					break;
@@ -271,25 +280,25 @@ int CSfmlMainWindow::display()
 		m_window->clear(sf::Color(0, 0, 0, 0));
 
 		m_sfmlSpinePlayer->redraw(m_window.get());
-		if (!m_bTrackHidden)
+		if (!m_audioState.isTrackHidden)
 		{
 			m_window->draw(m_trackText);
 		}
 
 		m_window->display();
 
-		if (!m_audio_files.empty())
+		if (!m_audioFiles.empty())
 		{
 			if (sound.getStatus() == sf::SoundSource::Stopped)
 			{
-				if (m_nAudioIndex < m_audio_files.size() - 1)
+				if (m_nAudioIndex < m_audioFiles.size() - 1)
 				{
 					StepOnTrack(true);
 				}
 			}
 		}
 
-		if (bOnWindowMove)
+		if (m_windowState.toBeMoved)
 		{
 			int iPosX = sf::Mouse::getPosition().x - m_window->getSize().x / 2;
 			int iPosY = sf::Mouse::getPosition().y - m_window->getSize().y / 2;
@@ -304,25 +313,70 @@ void CSfmlMainWindow::resizeWindow()
 {
 	if (m_sfmlSpinePlayer.get() != nullptr)
 	{
-		sf::Vector2f fBaseSize = m_sfmlSpinePlayer->getBaseSize();
-		float fScale = m_sfmlSpinePlayer->getCanvasScale();
+		const sf::Vector2f fBaseSize = m_sfmlSpinePlayer->getBaseSize();
+		const float fScale = m_sfmlSpinePlayer->getCanvasScale();
 
-		unsigned int maxWindowWidth = static_cast<unsigned int>(fBaseSize.x * (fScale - kScaleDelta));
-		unsigned int maxWindowHeight = static_cast<unsigned int>(fBaseSize.y * (fScale - kScaleDelta));
-		if (maxWindowWidth < sf::VideoMode::getDesktopMode().width || maxWindowHeight < sf::VideoMode::getDesktopMode().height)
+		const unsigned int maxWindowWidth = static_cast<unsigned int>(fBaseSize.x * (fScale - kScaleDelta));
+		const unsigned int maxWindowHeight = static_cast<unsigned int>(fBaseSize.y * (fScale - kScaleDelta));
+
+		const sf::Vector2u monitorSize = getMonitorInfo().size;
+
+		if (maxWindowWidth < monitorSize.x || maxWindowHeight < monitorSize.y)
 		{
-			m_window->setSize(sf::Vector2u(static_cast<unsigned int>(fBaseSize.x * fScale), static_cast<unsigned int>(fBaseSize.y * fScale)));
+			const unsigned int windowWidth = static_cast<unsigned int>(fBaseSize.x * fScale);
+			const unsigned int windowHeight = static_cast<unsigned int>(fBaseSize.y * fScale);
+
+			m_window->setSize(sf::Vector2u(windowWidth, windowHeight));
 			m_window->setView(sf::View((fBaseSize * fScale) / 2.f, fBaseSize * fScale));
 		}
 	}
 }
 
-void CSfmlMainWindow::resetScale()
+void CSfmlMainWindow::alignWindowToTheTopLeftOfMonitor()
+{
+	m_window->setPosition(getMonitorInfo().position);
+}
+
+CSfmlMainWindow::MonitorInfo CSfmlMainWindow::getMonitorInfo()
+{
+	/* SFML provides information only on primary monitor. */
+#if !defined _WIN32
+	const sf::VideoMode monitorSize = sf::VideoMode::getDesktopMode();
+	return { {}, {monitorSize.width, monitorSize.height} };
+#else
+	MONITORINFO monitorInfo{ sizeof(MONITORINFO) };
+	HMONITOR hMonitor = ::MonitorFromWindow(m_window->getSystemHandle(), MONITOR_DEFAULTTONEAREST);
+	if (hMonitor != nullptr)
+	{
+		::GetMonitorInfoW(hMonitor, &monitorInfo);
+	}
+
+	const int x = static_cast<int>(monitorInfo.rcMonitor.left);
+	const int y = static_cast<int>(monitorInfo.rcMonitor.top);
+
+	const unsigned int width = static_cast<unsigned int>(monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left);
+	const unsigned int height = static_cast<unsigned int>(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+
+	return { {x, y}, {width, height} };
+#endif
+}
+
+void CSfmlMainWindow::resetSpinePlayerScale()
 {
 	m_sfmlSpinePlayer->resetScale();
-	resizeWindow();
 
-	m_sfmlSpinePlayer->setSkeletonScale(m_sfmlSpinePlayer->getSkeletonScale() + 0.05f);
+	const sf::Vector2f fBaseSize = m_sfmlSpinePlayer->getBaseSize();
+	const float skeletonScale = m_sfmlSpinePlayer->getSkeletonScale();
+
+	const sf::Vector2u monitorSize = getMonitorInfo().size;
+	const bool isLandscape = monitorSize.x > monitorSize.y;
+	const bool toFitToWidth = isLandscape ^ m_windowStyle.toFitToMonitorHeight;
+	const float scale = (toFitToWidth ? monitorSize.x : monitorSize.y) / (toFitToWidth ? fBaseSize.x : fBaseSize.y);
+
+	m_sfmlSpinePlayer->setSkeletonScale(scale + 0.05f);
+	m_sfmlSpinePlayer->setCanvasScale(scale);
+
+	resizeWindow();
 }
 
 void CSfmlMainWindow::toggleTextColour()
@@ -333,5 +387,5 @@ void CSfmlMainWindow::toggleTextColour()
 
 void CSfmlMainWindow::toggleTextVisibility()
 {
-	m_bTrackHidden ^= true;
+	m_audioState.isTrackHidden ^= true;
 }

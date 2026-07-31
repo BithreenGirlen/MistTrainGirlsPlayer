@@ -8,24 +8,26 @@
 class CSfmlMainWindow
 {
 public:
-	CSfmlMainWindow(const wchar_t* swzWindowName = nullptr);
+	CSfmlMainWindow(const wchar_t* windowName = nullptr);
 	~CSfmlMainWindow();
 
-	bool SetSpines(const std::string& folderPath, const std::vector<std::string>& names);
-	void SetVoices(std::vector<std::string>& filePaths);
-	bool SetFont(const std::string& filePath, bool bBold = true, bool bItalic = true);
+	bool setSpines(const std::string& folderPath, const std::vector<std::string>& names);
+	void setVoices(std::vector<std::string>& filePaths);
+	bool setFont(const std::string& filePath, bool bold = true, bool italic = true);
 
-	int Display();
+	int display();
 
-	sf::RenderWindow* GetWindow() const { return m_window.get(); }
+	sf::RenderWindow* getWindow() const { return m_window.get(); }
 private:
+	static constexpr float kScaleDelta = 0.025f;
+
 	std::unique_ptr<sf::RenderWindow> m_window;
 
 	std::unique_ptr<CSfmlSpinePlayer> m_sfmlSpinePlayer;
 	sf::Clock m_spineClock;
 
-	void ResizeWindow();
-	void ResetScale();
+	void resizeWindow();
+	void resetScale();
 
 	std::vector<std::string> m_audio_files;
 	size_t m_nAudioIndex = 0;
@@ -34,8 +36,8 @@ private:
 	sf::Text m_trackText;
 	bool m_bTrackHidden = false;
 
-	void ToggleTextColour();
-	void ToggleTextVisibility();
+	void toggleTextColour();
+	void toggleTextVisibility();
 };
 
 #endif // !SFML_MAIN_WINDOW_H_

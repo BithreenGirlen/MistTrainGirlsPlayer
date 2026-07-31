@@ -85,11 +85,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	::setlocale(LC_ALL, ".utf8");
 	CSfmlMainWindow mainWindow(L"MistTrainGirls spine player");
 
-	std::wstring wstrPickedFolder = win_dialogue::SelectFolder(nullptr, mainWindow.GetWindow()->getSystemHandle());
+	std::wstring wstrPickedFolder = win_dialogue::SelectFolder(nullptr, mainWindow.getWindow()->getSystemHandle());
 	if (!wstrPickedFolder.empty())
 	{
-		mainWindow.SetFont("C:\\Windows\\Fonts\\yumindb.ttf", true, true);
-		mainWindow.GetWindow()->setFramerateLimit(mstr::GetDisplayRefreshRate());
+		mainWindow.setFont("C:\\Windows\\Fonts\\yumindb.ttf", true, true);
+		mainWindow.getWindow()->setFramerateLimit(mstr::GetDisplayRefreshRate());
 
 		std::vector<std::wstring> folderPaths;
 		size_t nFolderIndex = 0;
@@ -100,14 +100,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			std::vector<std::string> names;
 			mstr::GetSpineNameList(wstrFolderPath, names);
-			bool bRet = mainWindow.SetSpines(win_text::NarrowUtf8(wstrFolderPath), names);
+			bool bRet = mainWindow.setSpines(win_text::NarrowUtf8(wstrFolderPath), names);
 			if (!bRet)break;
 
 			std::vector<std::string> audioFilePaths;
 			mstr::GetAudioFileList(wstrFolderPath, audioFilePaths);
-			mainWindow.SetVoices(audioFilePaths);
+			mainWindow.setVoices(audioFilePaths);
 
-			int iRet = mainWindow.Display();
+			int iRet = mainWindow.display();
 			if (iRet == 1)
 			{
 				++nFolderIndex;

@@ -1,16 +1,16 @@
-
+Ôªø
 
 #include <SFML/Audio.hpp>
 
 #include "sfml_main_window.h"
 
-CSfmlMainWindow::CSfmlMainWindow(const wchar_t* swzWindowName)
+CSfmlMainWindow::CSfmlMainWindow(const wchar_t* windowName)
 {
-	m_window = std::make_unique<sf::RenderWindow>(sf::VideoMode(1280, 720), swzWindowName, sf::Style::None);
+	m_window = std::make_unique<sf::RenderWindow>(sf::VideoMode(1280, 720), windowName, sf::Style::None);
 
 	m_window->setPosition(sf::Vector2i(0, 0));
 
-	m_sfmlSpinePlayer = std::make_unique<CSfmlSpinePlayer>(m_window.get());
+	m_sfmlSpinePlayer = std::make_unique<CSfmlSpinePlayer>();
 }
 
 CSfmlMainWindow::~CSfmlMainWindow()
@@ -18,7 +18,7 @@ CSfmlMainWindow::~CSfmlMainWindow()
 
 }
 
-bool CSfmlMainWindow::SetSpines(const std::string& folderPath, const std::vector<std::string>& names)
+bool CSfmlMainWindow::setSpines(const std::string& folderPath, const std::vector<std::string>& names)
 {
 	std::vector<std::string> atlasPaths;
 	atlasPaths.resize(names.size());
@@ -26,19 +26,19 @@ bool CSfmlMainWindow::SetSpines(const std::string& folderPath, const std::vector
 	skelPaths.resize(names.size());
 	for (size_t i = 0; i < names.size(); ++i)
 	{
-		atlasPaths[i] = folderPath + "\\" + names[i] + ".atlas";
-		skelPaths[i] = folderPath + "\\" + names[i] + ".skel";
+		atlasPaths[i].assign(folderPath).append("\\").append(names[i]).append(".atlas");
+		skelPaths[i].assign(folderPath).append("\\").append(names[i]).append(".skel");
 	}
-	return m_sfmlSpinePlayer->LoadSpineFromFile(atlasPaths, skelPaths, true);
+	return m_sfmlSpinePlayer->loadSpineFromFile(atlasPaths, skelPaths, true);
 }
 
-void CSfmlMainWindow::SetVoices(std::vector<std::string>& filePaths)
+void CSfmlMainWindow::setVoices(std::vector<std::string>& filePaths)
 {
 	m_audio_files = std::move(filePaths);
 	m_nAudioIndex = 0;
 }
-/*èëëÃê›íË*/
-bool CSfmlMainWindow::SetFont(const std::string& filePath, bool bBold, bool bItalic)
+/*Êõ∏‰ΩìË®≠ÂÆö*/
+bool CSfmlMainWindow::setFont(const std::string& filePath, bool bold, bool italic)
 {
 	bool bRet = m_trackFont.loadFromFile(filePath);
 #ifdef _WIN32
@@ -55,16 +55,16 @@ bool CSfmlMainWindow::SetFont(const std::string& filePath, bool bBold, bool bIta
 	/*Audio track indicator*/
 	m_trackText.setFont(m_trackFont);
 	m_trackText.setFillColor(sf::Color::Black);
-	m_trackText.setStyle((bBold ? sf::Text::Style::Bold : 0) | (bItalic ? sf::Text::Style::Italic : 0));
+	m_trackText.setStyle((bold ? sf::Text::Style::Bold : 0) | (italic ? sf::Text::Style::Italic : 0));
 	m_trackText.setOutlineThickness(fOutLineThickness);
 	m_trackText.setOutlineColor(sf::Color::White);
 
 	return true;
 }
 
-int CSfmlMainWindow::Display()
+int CSfmlMainWindow::display()
 {
-	ResetScale();
+	resetScale();
 
 	sf::SoundBuffer soundBuffer;
 	sf::Sound sound;
@@ -76,7 +76,7 @@ int CSfmlMainWindow::Display()
 		sound.play();
 	}
 
-	/*èCê≥Ç™ñ ì|Ç»ÇÃÇ≈Ç±Ç±Ç≈ãLèq*/
+	/*‰øÆÊ≠£„ÅåÈù¢ÂÄí„Å™„ÅÆ„Åß„Åì„Åì„ÅßË®òËø∞*/
 	const auto UpdateTrackIndicator = [this]()
 		-> void
 		{
@@ -86,7 +86,7 @@ int CSfmlMainWindow::Display()
 				return;
 			}
 
-			std::string str = std::to_string(m_nAudioIndex + 1) + "/" + std::to_string(m_audio_files.size());
+			std::string str = std::to_string(m_nAudioIndex + 1).append("/").append(std::to_string(m_audio_files.size()));
 			m_trackText.setString(str);
 		};
 
@@ -162,14 +162,14 @@ int CSfmlMainWindow::Display()
 
 					if (bLeftDowned && iX == 0 && iY == 0)
 					{
-						m_sfmlSpinePlayer->ShiftAnimation();
+						m_sfmlSpinePlayer->shiftAnimation();
 					}
 
 					bLeftDowned = false;
 				}
 				if (event.mouseButton.button == sf::Mouse::Middle)
 				{
-					ResetScale();
+					resetScale();
 				}
 				break;
 			case sf::Event::MouseMoved:
@@ -179,7 +179,7 @@ int CSfmlMainWindow::Display()
 					{
 						int iX = iMouseStartPos.x - event.mouseMove.x;
 						int iY = iMouseStartPos.y - event.mouseMove.y;
-						m_sfmlSpinePlayer->MoveViewPoint(iX, iY);
+						m_sfmlSpinePlayer->addOffset(iX, iY);
 
 						iMouseStartPos.x = event.mouseMove.x;
 						iMouseStartPos.y = event.mouseMove.y;
@@ -191,21 +191,36 @@ int CSfmlMainWindow::Display()
 			case sf::Event::MouseWheelScrolled:
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					m_sfmlSpinePlayer->RescaleTime(event.mouseWheelScroll.delta < 0);
+					static constexpr float kTimeScaleDelta = 0.05f;
+					const float scrollSign = event.mouseWheelScroll.delta < 0 ? 1.f : -1.f;
+
+					float timeScale = m_sfmlSpinePlayer->getTimeScale() + kTimeScaleDelta * scrollSign;
+					timeScale = (std::max)(timeScale, 0.f);
+					m_sfmlSpinePlayer->setTimeScale(timeScale);
+
 					bLeftCombinated = true;
 				}
 				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
-					/*âπê∫ëóÇËÅEñﬂÇµ*/
+					/*Èü≥Â£∞ÈÄÅ„Çä„ÉªÊàª„Åó*/
 					StepOnTrack(event.mouseWheelScroll.delta < 0);
 				}
 				else
 				{
-					m_sfmlSpinePlayer->RescaleSkeleton(event.mouseWheelScroll.delta < 0);
-					if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+					static constexpr float kMinScale = 0.15f;
+					const float scrollSign = event.mouseWheelScroll.delta < 0 ? 1.f : -1.f;
+
+					float skeletonScale = m_sfmlSpinePlayer->getSkeletonScale() + kScaleDelta * scrollSign;
+					skeletonScale = (std::max)(kMinScale, skeletonScale);
+					m_sfmlSpinePlayer->setSkeletonScale(skeletonScale);
+
+					if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
 					{
-						m_sfmlSpinePlayer->RescaleCanvas(event.mouseWheelScroll.delta < 0);
-						ResizeWindow();
+						float canvasScale = m_sfmlSpinePlayer->getCanvasScale() + kScaleDelta * scrollSign;
+						canvasScale = (std::max)(kMinScale, canvasScale);
+						m_sfmlSpinePlayer->setCanvasScale(canvasScale);
+
+						resizeWindow();
 					}
 				}
 				break;
@@ -224,16 +239,16 @@ int CSfmlMainWindow::Display()
 				switch (event.key.code)
 				{
 				case sf::Keyboard::Key::A:
-					m_sfmlSpinePlayer->TogglePma();
+					m_sfmlSpinePlayer->togglePma();
 					break;
 				case sf::Keyboard::Key::B:
-					m_sfmlSpinePlayer->ToggleBlendModeAdoption();
+					m_sfmlSpinePlayer->toggleBlendModeAdoption();
 					break;
 				case sf::Keyboard::Key::C:
-					ToggleTextColour();
+					toggleTextColour();
 					break;
 				case sf::Keyboard::Key::T:
-					ToggleTextVisibility();
+					toggleTextVisibility();
 					break;
 				case sf::Keyboard::Key::Escape:
 					m_window->close();
@@ -250,12 +265,12 @@ int CSfmlMainWindow::Display()
 		}
 
 		float fDelta = m_spineClock.getElapsedTime().asSeconds();
-		m_sfmlSpinePlayer->Update(fDelta);
+		m_sfmlSpinePlayer->update(fDelta);
 		m_spineClock.restart();
 
 		m_window->clear(sf::Color(0, 0, 0, 0));
 
-		m_sfmlSpinePlayer->Redraw();
+		m_sfmlSpinePlayer->redraw(m_window.get());
 		if (!m_bTrackHidden)
 		{
 			m_window->draw(m_trackText);
@@ -285,16 +300,16 @@ int CSfmlMainWindow::Display()
 	return 0;
 }
 
-void CSfmlMainWindow::ResizeWindow()
+void CSfmlMainWindow::resizeWindow()
 {
 	if (m_sfmlSpinePlayer.get() != nullptr)
 	{
-		sf::Vector2f fBaseSize = m_sfmlSpinePlayer->GetBaseSize();
-		float fScale = m_sfmlSpinePlayer->GetCanvasScale();
+		sf::Vector2f fBaseSize = m_sfmlSpinePlayer->getBaseSize();
+		float fScale = m_sfmlSpinePlayer->getCanvasScale();
 
-		unsigned int uiWindowWidthMax = static_cast<unsigned int>(fBaseSize.x * (fScale - CSfmlSpinePlayer::kfScalePortion));
-		unsigned int uiWindowHeightMax = static_cast<unsigned int>(fBaseSize.y * (fScale - CSfmlSpinePlayer::kfScalePortion));
-		if (uiWindowWidthMax < sf::VideoMode::getDesktopMode().width || uiWindowHeightMax < sf::VideoMode::getDesktopMode().height)
+		unsigned int maxWindowWidth = static_cast<unsigned int>(fBaseSize.x * (fScale - kScaleDelta));
+		unsigned int maxWindowHeight = static_cast<unsigned int>(fBaseSize.y * (fScale - kScaleDelta));
+		if (maxWindowWidth < sf::VideoMode::getDesktopMode().width || maxWindowHeight < sf::VideoMode::getDesktopMode().height)
 		{
 			m_window->setSize(sf::Vector2u(static_cast<unsigned int>(fBaseSize.x * fScale), static_cast<unsigned int>(fBaseSize.y * fScale)));
 			m_window->setView(sf::View((fBaseSize * fScale) / 2.f, fBaseSize * fScale));
@@ -302,20 +317,21 @@ void CSfmlMainWindow::ResizeWindow()
 	}
 }
 
-void CSfmlMainWindow::ResetScale()
+void CSfmlMainWindow::resetScale()
 {
-	m_sfmlSpinePlayer->ResetScale();
-	ResizeWindow();
-	m_sfmlSpinePlayer->SetZoom(1.05f);
+	m_sfmlSpinePlayer->resetScale();
+	resizeWindow();
+
+	m_sfmlSpinePlayer->setSkeletonScale(m_sfmlSpinePlayer->getSkeletonScale() + 0.05f);
 }
 
-void CSfmlMainWindow::ToggleTextColour()
+void CSfmlMainWindow::toggleTextColour()
 {
 	m_trackText.setFillColor(m_trackText.getFillColor() == sf::Color::Black ? sf::Color::White : sf::Color::Black);
 	m_trackText.setOutlineColor(m_trackText.getFillColor() == sf::Color::Black ? sf::Color::White : sf::Color::Black);
 }
 
-void CSfmlMainWindow::ToggleTextVisibility()
+void CSfmlMainWindow::toggleTextVisibility()
 {
 	m_bTrackHidden ^= true;
 }

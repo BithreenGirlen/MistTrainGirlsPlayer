@@ -1,20 +1,25 @@
 ﻿#ifndef SFML_SPINE_PLAYER_H_
 #define SFML_SPINE_PLAYER_H_
 
-#include"spine_player.h"
+#include "spine_player.h"
 
 class CSfmlSpinePlayer : public CSpinePlayer
 {
 public:
-	CSfmlSpinePlayer(sf::RenderWindow* pSfmlWindow);
+	CSfmlSpinePlayer();
 	virtual ~CSfmlSpinePlayer();
 
-	virtual void Redraw();
-private:
-	virtual void WorkOutDefaultScale();
-	virtual void WorkOutDefaultOffset();
+	void redraw(sf::RenderTarget* pRenderTarget);
 
-	sf::RenderWindow *m_pSfmlWindow = nullptr;
+	sf::FloatRect getCurrentBoundingOfSlot(const char* slotName, size_t nameLength) const;
+	template<size_t nameSize>
+	sf::FloatRect getCurrentBoundingOfSlot(const char(&slotName)[nameSize]) const
+	{
+		return getCurrentBoundingOfSlot(slotName, nameSize - 1);
+	}
+private:
+	void workOutDefaultScale() override;
+	void workOutDefaultSizeAndOffset() override;
 };
 
 #endif // !SFML_SPINE_PLAYER_H_

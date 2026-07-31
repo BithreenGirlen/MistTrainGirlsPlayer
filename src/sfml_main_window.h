@@ -18,6 +18,7 @@ public:
 	int display();
 
 	sf::RenderWindow* getWindow() const { return m_window.get(); }
+	CSfmlSpinePlayer* getSpinePlayer() const { return m_sfmlSpinePlayer.get(); }
 private:
 	static constexpr float kScaleDelta = 0.025f;
 

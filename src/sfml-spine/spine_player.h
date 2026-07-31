@@ -71,6 +71,7 @@ public:
 
 	void enableConversionToPmaOnLoading(bool toEnable);
 	bool isConversionToPmaOnLoadingEnabled() const noexcept;
+	void setTextureLoadCallback(void (*pFunc)(void* pUserDatum, const char* textureFilePath, size_t filePathLength, void* pOutImage), void* pUserDatum);
 
 	/// @brief Get animation name actually entried in the track.
 	const char* getCurrentAnimationName();

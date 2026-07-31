@@ -237,6 +237,9 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 		}
 		else continue;
 
+		/* Even without texture, it would be possible to draw polygon but tedious. */
+		if (pSfmlTexture == nullptr)continue;
+
 		if (m_clipper.isClipping())
 		{
 			m_clipper.clipTriangles(m_worldVertices, *pIndices, *pAttachmentUvs, 2);
@@ -256,15 +259,11 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 		);
 		const sf::Vector2u& textureSize = pSfmlTexture->getSize();
 
-		m_sfmlVertices.clear();
-		/*
-		* The two tasks are required because SFML does not support indexed drawing.
-		* 1. Map index to vertex when adding.
-		* 2. Multiply alpha to colours if necessary.
-		*/
+		m_sfmlVertices.resize(pIndices->size());
+		/* Map index to vertex when ecause SFML does not support indexed drawing. */
 		for (int ii = 0; ii < pIndices->size(); ++ii)
 		{
-			sf::Vertex sfmlVertex;
+			auto& sfmlVertex = m_sfmlVertices[ii];
 
 			sfmlVertex.position.x = (*pVertices)[(*pIndices)[ii] * 2LL];
 			sfmlVertex.position.y = (*pVertices)[(*pIndices)[ii] * 2LL + 1];
@@ -276,8 +275,6 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 
 			sfmlVertex.texCoords.x = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL] * textureSize.x;
 			sfmlVertex.texCoords.y = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL + 1] * textureSize.y;
-
-			m_sfmlVertices.append(sfmlVertex);
 		}
 
 		sf::BlendMode sfmlBlendMode;
@@ -411,10 +408,18 @@ bool CSfmlSpineDrawable::isSlotToBeLeftOut(const spine::String& slotName) const
 void CSfmlTextureLoader::load(spine::AtlasPage& atlasPage, const spine::String& textureFilePath)
 {
 	sf::Image sfImage;
-	if (!sfImage.loadFromFile(textureFilePath.buffer()))
+	if (m_pTextureLoadCallback != nullptr)
 	{
-		/* SFML does not have logger. */
-		return;
+		m_pTextureLoadCallback(m_pCallbackUserDatum, textureFilePath.buffer(), textureFilePath.length(), &sfImage);
+	}
+	/* No empty-like method. */
+	if(sfImage.getPixelsPtr() == nullptr)
+	{
+		if (!sfImage.loadFromFile(textureFilePath.buffer()))
+		{
+			/* SFML does not have logger. */
+			return;
+		}
 	}
 
 #if defined(SPINE_40) || defined(SPINE_41) || defined (SPINE_42)
@@ -504,4 +509,10 @@ bool CSfmlTextureLoader::isConversionToPmaEnabled() const noexcept
 #else
 	return m_toConvertToPma;
 #endif
+}
+
+void CSfmlTextureLoader::setTextureLoadCallback(void(*pFunc)(void* pUserDatum, const char* textureFilePath, size_t filePathLength, void* pOutImage), void* pUserDatum)
+{
+	m_pTextureLoadCallback = pFunc;
+	m_pCallbackUserDatum = pUserDatum;
 }

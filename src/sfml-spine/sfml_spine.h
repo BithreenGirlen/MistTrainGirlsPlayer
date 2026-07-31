@@ -63,6 +63,8 @@ public:
 
 	void enableConversionToPma(bool toEnable);
 	bool isConversionToPmaEnabled() const noexcept;
+
+	void setTextureLoadCallback(void (*pFunc)(void* pUserDatum, const char* textureFilePath, size_t filePathLength, void* pOutImage), void* pUserDatum);
 private:
 	/* AtlasPage has pma field since spine 4.0 */
 #if defined(SPINE_40) || defined(SPINE_41) || defined (SPINE_42)
@@ -71,6 +73,9 @@ private:
 #else /* Spine 3.8 */
 	bool m_toConvertToPma = false;
 #endif
+
+	void (*m_pTextureLoadCallback)(void* pUserDatum, const char* textureFilePath, size_t filePathLength, void* pOutImage) = nullptr;
+	void* m_pCallbackUserDatum = nullptr;
 };
 
 #endif //!SFML_SPINE_CPP_H_

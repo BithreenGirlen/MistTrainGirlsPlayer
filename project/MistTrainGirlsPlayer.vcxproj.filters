@@ -57,6 +57,9 @@
     <ClInclude Include="pch.h">
       <Filter>Resource</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\win_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -271,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\win_image.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

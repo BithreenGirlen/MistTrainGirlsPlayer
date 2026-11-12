@@ -18,14 +18,14 @@ namespace win_image
 		None = 0, Deg90, Deg180, Deg270
 	};
 
-	enum class EAlpha : uint8_t
+	enum class EFormat : uint8_t
 	{
-		Normal = 0, Premultiplied
+		BGRA32 = 0, PBGRA32, RGBA32, PRGBA32
 	};
 
-	bool LoadImageToMemory(const wchar_t* filePath, SImageFrame* pImageFrame, float fScale = 1.f, ERotation rotation = ERotation::None, EAlpha alpha = EAlpha::Normal);
+	bool LoadImageToMemory(const wchar_t* filePath, SImageFrame* pImageFrame, float fScale = 1.f, ERotation rotation = ERotation::None, EFormat format = EFormat::BGRA32);
 	/// @brief Pass `IWICBitmap**` to the second argument.
-	bool LoadImageToWicBitmap(const wchar_t* filePath, void** pWicBitmap, float fScale = 1.f, ERotation rotation = ERotation::None, EAlpha alpha = EAlpha::Normal);
+	bool LoadImageToWicBitmap(const wchar_t* filePath, void** pWicBitmap, float fScale = 1.f, ERotation rotation = ERotation::None, EFormat format = EFormat::BGRA32);
 
 	bool SkimImageSize(const wchar_t* filePath, unsigned int* width, unsigned int* height);
 

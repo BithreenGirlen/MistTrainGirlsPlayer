@@ -102,17 +102,8 @@ namespace mstr
 		* So rely on OS-specific feature here.
 		*/
 		win_image::SImageFrame imageFrame;
-		bRet = win_image::LoadImageToMemory(pathBuffer, &imageFrame);
+		bRet = win_image::LoadImageToMemory(pathBuffer, &imageFrame, 1.f, win_image::ERotation::None, win_image::EFormat::RGBA32);
 		if (!bRet)return;
-
-		/* BGRA32 => RGBA32 */
-		uint32_t* pPixels = reinterpret_cast<uint32_t*>(imageFrame.pixels.data());
-		const size_t nCount = imageFrame.pixels.size() / 4;
-		for (size_t i = 0; i < nCount; ++i)
-		{
-			auto& p = pPixels[i];
-			p = ((p & 0x000000ff) << 16) | ((p & 0x00ff0000) >> 16) | ((p & 0xff00ff00));
-		}
 
 		sf::Image* pImage = static_cast<sf::Image*>(pOutImage);
 		pImage->create(imageFrame.width, imageFrame.height, imageFrame.pixels.data());

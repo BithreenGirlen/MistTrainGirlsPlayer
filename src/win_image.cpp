@@ -14,19 +14,59 @@ namespace win_image
 		Jpg
 	};
 
-	static GUID ToWicGuid(EOutputType eOutputType)
+	static GUID ToWicContainerFormat(EOutputType eOutputType)
 	{
 		switch (eOutputType)
 		{
-		case EOutputType::Png: return GUID_ContainerFormatPng;
-		case EOutputType::Jpg: return GUID_ContainerFormatJpeg;
+		case EOutputType::Png: 
+			return GUID_ContainerFormatPng;
+		case EOutputType::Jpg:
+			return GUID_ContainerFormatJpeg;
 		default:break;
 		}
 
 		return {};
 	}
 
-	static bool LoadImageWithTransformOption(const wchar_t* filePath, IWICBitmap** pOutWicBitmap, float fScale, ERotation rotation, EAlpha alpha)
+	static WICBitmapTransformOptions ToWicTransformOptions(ERotation rotation)
+	{
+		switch (rotation)
+		{
+		case ERotation::None:
+			break;
+		case ERotation::Deg90:
+			return WICBitmapTransformOptions::WICBitmapTransformRotate90;
+		case ERotation::Deg180:
+			return WICBitmapTransformOptions::WICBitmapTransformRotate180;
+		case ERotation::Deg270:
+			return WICBitmapTransformOptions::WICBitmapTransformRotate270;
+		default:
+			break;
+		}
+
+		return WICBitmapTransformRotate0;
+	};
+
+	static WICPixelFormatGUID ToWixPixelFormatGuid(EFormat format)
+	{
+		switch (format)
+		{
+		case EFormat::BGRA32:
+			break;
+		case EFormat::PBGRA32:
+			return GUID_WICPixelFormat32bppPBGRA;
+		case EFormat::RGBA32:
+			return GUID_WICPixelFormat32bppRGBA;
+		case EFormat::PRGBA32:
+			return GUID_WICPixelFormat32bppPRGBA;
+		default:
+			break;
+		}
+
+		return GUID_WICPixelFormat32bppBGRA;
+	}
+
+	static bool LoadImageWithTransformOption(const wchar_t* filePath, IWICBitmap** pOutWicBitmap, float fScale, ERotation rotation, EFormat format)
 	{
 		if (filePath == nullptr || pOutWicBitmap == nullptr)return false;
 
@@ -42,59 +82,56 @@ namespace win_image
 		hr = pWicBitmapDecoder->GetFrame(0, &pWicFrameDecode);
 		if (FAILED(hr))return false;
 
+		CComPtr<IWICBitmapScaler> pWicBmpScaler;
+		CComPtr<IWICBitmapFlipRotator> pWicFlipRotator;
+		IWICBitmapSource* pBitmapSourceRef = pWicFrameDecode;
+
+		/* Interpolation should be avoided for some formats not to cause bleeding even if the scaling were 1.f. */
+		const bool toScale = ::islessgreater(fScale, 1.f);
+		if (toScale)
+		{
+			hr = pWicImageFactory->CreateBitmapScaler(&pWicBmpScaler);
+			if (FAILED(hr))return false;
+
+			UINT width = 0, height = 0;
+			hr = pBitmapSourceRef->GetSize(&width, &height);
+			if (FAILED(hr)) return false;
+
+			hr = pWicBmpScaler->Initialize(pBitmapSourceRef, static_cast<UINT>(width * fScale), static_cast<UINT>(height * fScale), WICBitmapInterpolationMode::WICBitmapInterpolationModeCubic);
+			if (FAILED(hr))return false;
+
+			pBitmapSourceRef = pWicBmpScaler.p;
+		}
+
+		const bool toRotate = rotation != ERotation::None;
+		if (toRotate)
+		{
+			/*
+			 * Flip-rotation cannot be performed directly on pWicFrameDecode,
+			 * which is referred to when scaling were not perfomed.
+			 */
+			CComPtr<IWICBitmap> pWicBitmap;
+			hr = pWicImageFactory->CreateBitmapFromSource(pBitmapSourceRef, WICBitmapCacheOnLoad, &pWicBitmap);
+			if (FAILED(hr))return false;
+
+			hr = pWicImageFactory->CreateBitmapFlipRotator(&pWicFlipRotator);
+			if (FAILED(hr))return false;
+
+			hr = pWicFlipRotator->Initialize(pWicBitmap, ToWicTransformOptions(rotation));
+			if (FAILED(hr))return false;
+
+			pBitmapSourceRef = pWicFlipRotator.p;
+		}
+
 		CComPtr<IWICFormatConverter> pWicFormatConverter;
 		hr = pWicImageFactory->CreateFormatConverter(&pWicFormatConverter);
 		if (FAILED(hr))return false;
 
-		pWicFormatConverter->Initialize(pWicFrameDecode,
-			alpha == EAlpha::Normal ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppPBGRA,
-			WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom);
+		const WICPixelFormatGUID pixelFormat = ToWixPixelFormatGuid(format);
+		hr = pWicFormatConverter->Initialize(pBitmapSourceRef, pixelFormat, WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom);
 		if (FAILED(hr))return false;
 
-		CComPtr<IWICBitmapScaler> pWicBmpScaler;
-		hr = pWicImageFactory->CreateBitmapScaler(&pWicBmpScaler);
-		if (FAILED(hr))return false;
-
-		UINT width = 0, height = 0;
-		hr = pWicFormatConverter->GetSize(&width, &height);
-		if (FAILED(hr)) return false;
-
-		hr = pWicBmpScaler->Initialize(pWicFormatConverter, static_cast<UINT>(width * fScale), static_cast<UINT>(height * fScale), WICBitmapInterpolationMode::WICBitmapInterpolationModeCubic);
-		if (FAILED(hr))return false;
-
-		if (rotation != ERotation::None)
-		{
-			WICBitmapTransformOptions transformOption = WICBitmapTransformRotate0;
-			switch (rotation)
-			{
-			case ERotation::None:
-				break;
-			case ERotation::Deg90:
-				transformOption = WICBitmapTransformOptions::WICBitmapTransformRotate90;
-				break;
-			case ERotation::Deg180:
-				transformOption = WICBitmapTransformOptions::WICBitmapTransformRotate180;
-				break;
-			case ERotation::Deg270:
-				transformOption = WICBitmapTransformOptions::WICBitmapTransformRotate270;
-				break;
-			default:
-				break;
-			}
-
-			CComPtr<IWICBitmapFlipRotator> pWicFlipRotator;
-			hr = pWicImageFactory->CreateBitmapFlipRotator(&pWicFlipRotator);
-			if (FAILED(hr))return false;
-
-			hr = pWicFlipRotator->Initialize(pWicBmpScaler, transformOption);
-			if (FAILED(hr))return false;
-
-			hr = pWicImageFactory->CreateBitmapFromSource(pWicFlipRotator, WICBitmapCacheOnDemand, pOutWicBitmap);
-		}
-		else
-		{
-			hr = pWicImageFactory->CreateBitmapFromSource(pWicBmpScaler, WICBitmapCacheOnDemand, pOutWicBitmap);
-		}
+		hr = pWicImageFactory->CreateBitmapFromSource(pWicFormatConverter, WICBitmapCacheOnDemand, pOutWicBitmap);
 
 		return SUCCEEDED(hr);
 	}
@@ -111,7 +148,7 @@ namespace win_image
 		if (FAILED(hr))return false;
 
 		CComPtr<IWICBitmapEncoder> pWicBitmapEncoder;
-		hr = pWicImagingFactory->CreateEncoder(ToWicGuid(eOutputType), nullptr, &pWicBitmapEncoder);
+		hr = pWicImagingFactory->CreateEncoder(ToWicContainerFormat(eOutputType), nullptr, &pWicBitmapEncoder);
 		if (FAILED(hr))return false;
 
 		CComPtr<IWICStream> pWicStream;
@@ -160,14 +197,14 @@ namespace win_image
 	}
 }
 
-bool win_image::LoadImageToMemory(const wchar_t* filePath, SImageFrame* pImageFrame, float fScale, ERotation rotation, EAlpha alpha)
+bool win_image::LoadImageToMemory(const wchar_t* filePath, SImageFrame* pImageFrame, float fScale, ERotation rotation, EFormat format)
 {
 	if (pImageFrame == nullptr)return false;
 
 	SImageFrame* const s = pImageFrame;
 
 	CComPtr<IWICBitmap> pWicBitmap;
-	LoadImageWithTransformOption(filePath, &pWicBitmap, fScale, rotation, alpha);
+	LoadImageWithTransformOption(filePath, &pWicBitmap, fScale, rotation, format);
 
 	pWicBitmap->GetSize(&s->width, &s->height);
 
@@ -186,10 +223,10 @@ bool win_image::LoadImageToMemory(const wchar_t* filePath, SImageFrame* pImageFr
 	return true;
 }
 
-bool win_image::LoadImageToWicBitmap(const wchar_t* filePath, void** pWicBitmap, float fScale, ERotation rotation, EAlpha alpha)
+bool win_image::LoadImageToWicBitmap(const wchar_t* filePath, void** pWicBitmap, float fScale, ERotation rotation, EFormat format)
 {
 	IWICBitmap** p = reinterpret_cast<IWICBitmap**>(pWicBitmap);
-	return LoadImageWithTransformOption(filePath, p, fScale, rotation, alpha);
+	return LoadImageWithTransformOption(filePath, p, fScale, rotation, format);
 }
 
 bool win_image::SkimImageSize(const wchar_t* filePath, unsigned int* width, unsigned int* height)

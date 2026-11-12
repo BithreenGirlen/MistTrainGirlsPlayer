@@ -2,29 +2,11 @@
 
 #include "sfml_spine_player.h"
 
-CSfmlSpinePlayer::CSfmlSpinePlayer()
+
+void CSfmlSpinePlayer::redraw(sf::RenderTarget* pRenderTarget, const sf::RenderStates& renderState)
 {
-
-}
-
-CSfmlSpinePlayer::~CSfmlSpinePlayer()
-{
-
-}
-
-
-void CSfmlSpinePlayer::redraw(sf::RenderTarget* pRenderTarget)
-{
-	if (pRenderTarget != nullptr)
+	if (pRenderTarget != nullptr && !m_drawables.empty())
 	{
-		const auto& targetSize = pRenderTarget->getSize();
-		float fX = (m_fBaseSize.x * m_fSkeletonScale - targetSize.x) / 2;
-		float fY = (m_fBaseSize.y * m_fSkeletonScale - targetSize.y) / 2;
-
-		sf::RenderStates renderState;
-		renderState.blendMode = sf::BlendAlpha;
-		renderState.transform.translate(-fX, -fY).scale(m_fSkeletonScale, m_fSkeletonScale);
-
 		if (!m_isDrawOrderReversed)
 		{
 			for (size_t i = 0; i < m_drawables.size(); ++i)
@@ -40,6 +22,14 @@ void CSfmlSpinePlayer::redraw(sf::RenderTarget* pRenderTarget)
 			}
 		}
 	}
+}
+
+sf::Transform CSfmlSpinePlayer::calculateTransformMatrix(const sf::Vector2u& targetSize) const noexcept
+{
+	const float fX = (m_fBaseSize.x * m_fSkeletonScale - targetSize.x) / 2;
+	const float fY = (m_fBaseSize.y * m_fSkeletonScale - targetSize.y) / 2;
+
+	return sf::Transform().translate({ -fX, -fY }).scale({ m_fSkeletonScale, m_fSkeletonScale });
 }
 
 sf::FloatRect CSfmlSpinePlayer::getCurrentBoundingOfSlot(const char* slotName, size_t nameLength) const

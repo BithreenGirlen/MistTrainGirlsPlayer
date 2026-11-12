@@ -6,11 +6,12 @@
 class CSfmlSpinePlayer : public CSpinePlayer
 {
 public:
-	CSfmlSpinePlayer();
-	virtual ~CSfmlSpinePlayer();
+	CSfmlSpinePlayer() = default;
+	virtual ~CSfmlSpinePlayer() = default;
 
-	void redraw(sf::RenderTarget* pRenderTarget);
+	void redraw(sf::RenderTarget* pRenderTarget, const sf::RenderStates& renderState);
 
+	sf::Transform calculateTransformMatrix(const sf::Vector2u& targetSize) const noexcept;
 	sf::FloatRect getCurrentBoundingOfSlot(const char* slotName, size_t nameLength) const;
 	template<size_t nameSize>
 	sf::FloatRect getCurrentBoundingOfSlot(const char(&slotName)[nameSize]) const

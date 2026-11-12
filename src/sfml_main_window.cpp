@@ -278,8 +278,10 @@ int CSfmlMainWindow::display()
 		m_spineClock.restart();
 
 		m_window->clear(sf::Color(0, 0, 0, 0));
-
-		m_sfmlSpinePlayer->redraw(m_window.get());
+		{
+			const sf::RenderStates spineRenderStates(m_sfmlSpinePlayer->calculateTransformMatrix(m_window->getSize()));
+			m_sfmlSpinePlayer->redraw(m_window.get(), spineRenderStates);
+		}
 		if (!m_audioState.isTrackHidden)
 		{
 			m_window->draw(m_trackText);

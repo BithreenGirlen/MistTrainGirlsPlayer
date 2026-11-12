@@ -21,8 +21,8 @@ public:
 	CSpinePlayer() = default;
 	virtual ~CSpinePlayer() = default;
 
-	bool loadSpineFromFile(const std::vector<std::string>& atlasPaths, const std::vector<std::string>& skelPaths, bool isBinarySkel);
-	bool loadSpineFromMemory(const std::vector<std::string>& atlasData, const std::vector<std::string>& texturePaths, const std::vector<std::string>& skelData, bool isBinarySkel);
+	bool loadSpineFromFile(const std::vector<std::string>& atlasFilePaths, const std::vector<std::string>& skeletonFilePaths, bool isBinarySkel);
+	bool loadSpineFromMemory(const std::vector<std::string>& atlasFileData, const std::vector<std::string>& textureDirectories, const std::vector<std::string>& skeletonFileData, bool isBinarySkel);
 
 	bool addSpineFromFile(const char* atlasPath, const char* skelPath, bool isBinarySkel);
 
@@ -123,7 +123,7 @@ protected:
 	enum Constants { kBaseWidth = 1280, kBaseHeight = 720 };
 
 	CTextureLoader m_textureLoader;
-	std::vector<std::unique_ptr<spine::Atlas>> m_atlases;
+	std::vector<std::shared_ptr<spine::Atlas>> m_atlases;
 	std::vector<std::shared_ptr<spine::SkeletonData>> m_skeletonData;
 	std::vector<std::unique_ptr<CSpineDrawable>> m_drawables;
 

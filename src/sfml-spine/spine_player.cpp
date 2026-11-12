@@ -217,39 +217,7 @@ void CSpinePlayer::setupSkin()
 	}
 }
 
-void CSpinePlayer::togglePma()
-{
-	for (const auto& pDrawable : m_drawables)
-	{
-		pDrawable->premultiplyAlpha(!pDrawable->isAlphaPremultiplied());
-	}
-}
-
-void CSpinePlayer::toggleBlendModeAdoption()
-{
-	for (const auto& pDrawable : m_drawables)
-	{
-		pDrawable->forceBlendModeNormal(!pDrawable->isBlendModeNormalForced());
-	}
-}
-
-void CSpinePlayer::togglePause()
-{
-	for (const auto& pDrawable : m_drawables)
-	{
-		pDrawable->setPause(!pDrawable->isPaused());
-	}
-}
-
-void CSpinePlayer::toggleVisibility()
-{
-	for (const auto& pDrawable : m_drawables)
-	{
-		pDrawable->setVisibility(!pDrawable->isVisible());
-	}
-}
-
-bool CSpinePlayer::premultiplyAlpha(bool premultiplied, size_t nDrawableIndex)
+bool CSpinePlayer::premultiplyAlpha(bool premultiplied, size_t nDrawableIndex) noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -260,7 +228,15 @@ bool CSpinePlayer::premultiplyAlpha(bool premultiplied, size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::isAlphaPremultiplied(size_t nDrawableIndex)
+void CSpinePlayer::premultiplyAlphaAll(bool premultiplied) noexcept
+{
+	for (const auto& pDrawable : m_drawables)
+	{
+		pDrawable->premultiplyAlpha(premultiplied);
+	}
+}
+
+bool CSpinePlayer::isAlphaPremultiplied(size_t nDrawableIndex) const noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -270,7 +246,7 @@ bool CSpinePlayer::isAlphaPremultiplied(size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::forceBlendModeNormal(bool toForce, size_t nDrawableIndex)
+bool CSpinePlayer::forceBlendModeNormal(bool toForce, size_t nDrawableIndex) noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -281,7 +257,15 @@ bool CSpinePlayer::forceBlendModeNormal(bool toForce, size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::isBlendModeNormalForced(size_t nDrawableIndex)
+void CSpinePlayer::forceBlendModeNormalAll(bool toForce) noexcept
+{
+	for (const auto& pDrawable : m_drawables)
+	{
+		pDrawable->forceBlendModeNormal(toForce);
+	}
+}
+
+bool CSpinePlayer::isBlendModeNormalForced(size_t nDrawableIndex) const noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -291,7 +275,7 @@ bool CSpinePlayer::isBlendModeNormalForced(size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::setPause(bool paused, size_t nDrawableIndex)
+bool CSpinePlayer::setPause(bool paused, size_t nDrawableIndex) noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -302,7 +286,15 @@ bool CSpinePlayer::setPause(bool paused, size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::isPaused(size_t nDrawableIndex)
+void CSpinePlayer::setPauseAll(bool paused) noexcept
+{
+	for (const auto& pDrawable : m_drawables)
+	{
+		pDrawable->setPause(paused);
+	}
+}
+
+bool CSpinePlayer::isPaused(size_t nDrawableIndex) const noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -312,7 +304,7 @@ bool CSpinePlayer::isPaused(size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::setVisibility(bool visible, size_t nDrawableIndex)
+bool CSpinePlayer::setVisibility(bool visible, size_t nDrawableIndex) noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -323,7 +315,15 @@ bool CSpinePlayer::setVisibility(bool visible, size_t nDrawableIndex)
 	return false;
 }
 
-bool CSpinePlayer::isVisible(size_t nDrawableIndex)
+void CSpinePlayer::setVisibilityAll(bool visible) noexcept
+{
+	for (const auto& pDrawable : m_drawables)
+	{
+		pDrawable->setVisibility(visible);
+	}
+}
+
+bool CSpinePlayer::isVisible(size_t nDrawableIndex) const noexcept
 {
 	if (nDrawableIndex < m_drawables.size())
 	{
@@ -333,7 +333,7 @@ bool CSpinePlayer::isVisible(size_t nDrawableIndex)
 	return false;
 }
 
-void CSpinePlayer::setDrawOrder(bool reversed)
+void CSpinePlayer::setDrawOrder(bool reversed) noexcept
 {
 	m_isDrawOrderReversed = reversed;
 }

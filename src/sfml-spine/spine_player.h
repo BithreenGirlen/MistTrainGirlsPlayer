@@ -46,27 +46,26 @@ public:
 	void setSkinByName(const char* skinName);
 	void setupSkin();
 
-	/// @brief Toggle the state of all drawables
-	void togglePma();
-	void toggleBlendModeAdoption();
-	void togglePause();
-	void toggleVisibility();
-
+	/// @brief To perform PMA blend-mode on vertices or not.
 	/// @return false if it were out of range.
-	bool premultiplyAlpha(bool premultiplied, size_t nDrawableIndex = 0);
+	bool premultiplyAlpha(bool premultiplied, size_t nDrawableIndex = 0) noexcept;
+	void premultiplyAlphaAll(bool premultiplied) noexcept;
 	/// @return current state. If it were out of range, return false.
-	bool isAlphaPremultiplied(size_t nDrawableIndex = 0);
+	bool isAlphaPremultiplied(size_t nDrawableIndex = 0) const noexcept;
 
-	bool forceBlendModeNormal(bool toForce, size_t nDrawableIndex = 0);
-	bool isBlendModeNormalForced(size_t nDrawableIndex = 0);
+	bool forceBlendModeNormal(bool toForce, size_t nDrawableIndex = 0) noexcept;
+	void forceBlendModeNormalAll(bool toForce) noexcept;
+	bool isBlendModeNormalForced(size_t nDrawableIndex = 0) const noexcept;
 
-	bool setPause(bool paused, size_t nDrawableIndex = 0);
-	bool isPaused(size_t nDrawableIndex = 0);
+	bool setPause(bool paused, size_t nDrawableIndex = 0) noexcept;
+	void setPauseAll(bool paused) noexcept;
+	bool isPaused(size_t nDrawableIndex = 0) const noexcept;
 
-	bool setVisibility(bool visible, size_t nDrawableIndex = 0);
-	bool isVisible(size_t nDrawableIndex = 0);
+	bool setVisibility(bool visible, size_t nDrawableIndex = 0) noexcept;
+	void setVisibilityAll(bool visible) noexcept;
+	bool isVisible(size_t nDrawableIndex = 0) const noexcept;
 
-	void setDrawOrder(bool reversed);
+	void setDrawOrder(bool reversed) noexcept;
 	bool isDrawOrderReversed() const noexcept;
 
 	void enableConversionToPmaOnLoading(bool toEnable);

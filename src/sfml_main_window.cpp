@@ -240,10 +240,10 @@ int CSfmlMainWindow::display()
 				switch (event.key.code)
 				{
 				case sf::Keyboard::Key::A:
-					m_sfmlSpinePlayer->togglePma();
+					m_sfmlSpinePlayer->premultiplyAlphaAll(!m_sfmlSpinePlayer->isAlphaPremultiplied());
 					break;
 				case sf::Keyboard::Key::B:
-					m_sfmlSpinePlayer->toggleBlendModeAdoption();
+					m_sfmlSpinePlayer->forceBlendModeNormalAll(!m_sfmlSpinePlayer->isBlendModeNormalForced());
 					break;
 				case sf::Keyboard::Key::C:
 					toggleTextColour();

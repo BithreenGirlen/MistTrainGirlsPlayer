@@ -39,13 +39,6 @@ CSfmlSpineDrawable::CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData, spine
 	}
 
 	m_animationState = new spine::AnimationState(pAnimationStateData);
-
-	m_quadIndices.add(0);
-	m_quadIndices.add(1);
-	m_quadIndices.add(2);
-	m_quadIndices.add(2);
-	m_quadIndices.add(3);
-	m_quadIndices.add(0);
 }
 
 CSfmlSpineDrawable::~CSfmlSpineDrawable()
@@ -137,11 +130,13 @@ void CSfmlSpineDrawable::update(float fDelta)
 
 void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates renderStates) const
 {
+	static unsigned short s_quadIndices[] = { 0, 1, 2, 2, 3, 0 };
+
 	if (!m_isVisible)return;
 	if (m_skeleton == nullptr || m_animationState == nullptr)return;
 	if (m_skeleton->getColor().a == 0) return;
 
-	for (unsigned i = 0; i < m_skeleton->getSlots().size(); ++i)
+	for (size_t i = 0; i < m_skeleton->getSlots().size(); ++i)
 	{
 		spine::Slot& slot = *m_skeleton->getDrawOrder()[i];
 		spine::Attachment* pAttachment = slot.getAttachment();
@@ -160,7 +155,8 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 
 		spine::Vector<float>* pVertices = &m_worldVertices;
 		spine::Vector<float>* pAttachmentUvs = nullptr;
-		spine::Vector<unsigned short>* pIndices = nullptr;
+		unsigned short* pIndices = nullptr;
+		size_t nIndicesCount = 0;
 
 		spine::Color* pAttachmentColor = nullptr;
 
@@ -184,7 +180,8 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 			pRegionAttachment->computeWorldVertices(slot.getBone(), m_worldVertices, 0, 2);
 #endif
 			pAttachmentUvs = &pRegionAttachment->getUVs();
-			pIndices = &m_quadIndices;
+			pIndices = s_quadIndices;
+			nIndicesCount = sizeof(s_quadIndices) / sizeof(unsigned short);
 
 #if defined (SPINE_41) || defined (SPINE_42)
 			spine::AtlasRegion* pAtlasRegion = static_cast<spine::AtlasRegion*>(pRegionAttachment->getRegion());
@@ -214,7 +211,8 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 			pMeshAttachment->computeWorldVertices(slot, 0, pMeshAttachment->getWorldVerticesLength(), m_worldVertices, 0, 2);
 
 			pAttachmentUvs = &pMeshAttachment->getUVs();
-			pIndices = &pMeshAttachment->getTriangles();
+			pIndices = pMeshAttachment->getTriangles().buffer();
+			nIndicesCount = pMeshAttachment->getTriangles().size();
 
 #if defined (SPINE_41) || defined (SPINE_42)
 			spine::AtlasRegion* pAtlasRegion = static_cast<spine::AtlasRegion*>(pMeshAttachment->getRegion());
@@ -242,15 +240,21 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 
 		if (m_clipper.isClipping())
 		{
-			m_clipper.clipTriangles(m_worldVertices, *pIndices, *pAttachmentUvs, 2);
+			m_clipper.clipTriangles(m_worldVertices.buffer(), pIndices, nIndicesCount, pAttachmentUvs->buffer(), 2);
+			if (m_clipper.getClippedTriangles().size() == 0)
+			{
+				m_clipper.clipEnd(slot);
+				continue;
+			}
 			pVertices = &m_clipper.getClippedVertices();
 			pAttachmentUvs = &m_clipper.getClippedUVs();
-			pIndices = &m_clipper.getClippedTriangles();
+			pIndices = m_clipper.getClippedTriangles().buffer();
+			nIndicesCount = m_clipper.getClippedTriangles().size();
 		}
 
 		const spine::Color& skeletonColor = m_skeleton->getColor();
 		const spine::Color& slotColor = slot.getColor();
-		const spine::Color tint
+		const spine::Color spineVertexColor
 		(
 			skeletonColor.r * slotColor.r * pAttachmentColor->r,
 			skeletonColor.g * slotColor.g * pAttachmentColor->g,
@@ -258,31 +262,31 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 			skeletonColor.a * slotColor.a * pAttachmentColor->a
 		);
 		const sf::Vector2u& textureSize = pSfmlTexture->getSize();
+		const sf::Color sfmlVertexColor
+		(
+			static_cast<sf::Uint8>(spineVertexColor.r * 255.f * (m_isAlphaPremultiplied ? spineVertexColor.a : 1.f)),
+			static_cast<sf::Uint8>(spineVertexColor.g * 255.f * (m_isAlphaPremultiplied ? spineVertexColor.a : 1.f)),
+			static_cast<sf::Uint8>(spineVertexColor.b * 255.f * (m_isAlphaPremultiplied ? spineVertexColor.a : 1.f)),
+			static_cast<sf::Uint8>(spineVertexColor.a * 255.f)
+		);
 
-		m_sfmlVertices.resize(pIndices->size());
-		/* Map index to vertex when ecause SFML does not support indexed drawing. */
-		for (int ii = 0; ii < pIndices->size(); ++ii)
+		m_sfmlVertices.resize(nIndicesCount);
+		/* Map index to vertex because SFML does not support indexed drawing. */
+		for (size_t ii = 0; ii < nIndicesCount; ++ii)
 		{
 			auto& sfmlVertex = m_sfmlVertices[ii];
 
-			sfmlVertex.position.x = (*pVertices)[(*pIndices)[ii] * 2LL];
-			sfmlVertex.position.y = (*pVertices)[(*pIndices)[ii] * 2LL + 1];
+			sfmlVertex.position.x = (*pVertices)[pIndices[ii] * 2LL];
+			sfmlVertex.position.y = (*pVertices)[pIndices[ii] * 2LL + 1];
 
-			sfmlVertex.color.r = (sf::Uint8)(tint.r * 255.f * (m_isAlphaPremultiplied ? tint.a : 1.f));
-			sfmlVertex.color.g = (sf::Uint8)(tint.g * 255.f * (m_isAlphaPremultiplied ? tint.a : 1.f));
-			sfmlVertex.color.b = (sf::Uint8)(tint.b * 255.f * (m_isAlphaPremultiplied ? tint.a : 1.f));
-			sfmlVertex.color.a = (sf::Uint8)(tint.a * 255.f);
+			sfmlVertex.color = sfmlVertexColor;
 
-			sfmlVertex.texCoords.x = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL] * textureSize.x;
-			sfmlVertex.texCoords.y = (*pAttachmentUvs)[(*pIndices)[ii] * 2LL + 1] * textureSize.y;
+			sfmlVertex.texCoords.x = (*pAttachmentUvs)[pIndices[ii] * 2LL] * textureSize.x;
+			sfmlVertex.texCoords.y = (*pAttachmentUvs)[pIndices[ii] * 2LL + 1] * textureSize.y;
 		}
 
 		sf::BlendMode sfmlBlendMode;
-		/*
-		* Some slots specify BlendMode_Multiply though, BlendMode_Normal seems better;
-		* But in order not to overwrite the slot data, copy to temporary variable when forcing.
-		*/
-		spine::BlendMode spineBlnedMode = m_isToForceBlendModeNormal ? spine::BlendMode_Normal : slot.getData().getBlendMode();
+		const spine::BlendMode spineBlnedMode = m_isToForceBlendModeNormal ? spine::BlendMode_Normal : slot.getData().getBlendMode();
 		switch (spineBlnedMode)
 		{
 		case spine::BlendMode_Additive:
@@ -302,6 +306,7 @@ void CSfmlSpineDrawable::draw(sf::RenderTarget& renderTarget, sf::RenderStates r
 		renderStates.blendMode = sfmlBlendMode;
 		renderStates.texture = pSfmlTexture;
 		renderTarget.draw(m_sfmlVertices, renderStates);
+
 		m_clipper.clipEnd(slot);
 	}
 	m_clipper.clipEnd();

@@ -25,6 +25,19 @@ public:
 	void setVisibility(bool visible) noexcept;
 	bool isVisible() const noexcept;
 
+	/// @brief How physics to be updated and applied.
+	enum class Physics : unsigned char
+	{
+		None = 0, /* Do not update nor apply physics */
+		Reset, /* Reset physics to the current pose */
+		Update, /* Update and apply phisics. */
+		Pose /* Apply physics, but do not update. */
+	};
+
+	/// @brief Physics mode; valid only on  Spine 4.2 and later
+	void setPhysics(Physics physics);
+	Physics getPhysics() const noexcept;
+
 	void update(float fDelta);
 	void draw(sf::RenderTarget& renderTarget, sf::RenderStates renderStates) const override;
 
@@ -38,6 +51,7 @@ private:
 	bool m_isToForceBlendModeNormal = false;
 	bool m_isVisible = true;
 	bool m_isPaused = false;
+	Physics m_physics = Physics::Update;
 
 	spine::Skeleton* m_skeleton = nullptr;
 	spine::AnimationState* m_animationState = nullptr;

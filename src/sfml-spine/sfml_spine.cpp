@@ -2,6 +2,13 @@
 
 #include "sfml_spine.h"
 
+#if defined(SPINE_42)
+	static_assert(static_cast<spine::Physics>(CSfmlSpineDrawable::Physics::None) == spine::Physics::Physics_None, "Physics_None");
+	static_assert(static_cast<spine::Physics>(CSfmlSpineDrawable::Physics::Reset) == spine::Physics::Physics_Reset, "Physics_Reset");
+	static_assert(static_cast<spine::Physics>(CSfmlSpineDrawable::Physics::Update) == spine::Physics::Physics_Update, "Physics_Update");
+	static_assert(static_cast<spine::Physics>(CSfmlSpineDrawable::Physics::Pose) == spine::Physics::Physics_Pose, "Physics_Pose");
+#endif
+
 namespace spine
 {
 	SpineExtension* getDefaultExtension()
@@ -100,6 +107,16 @@ bool CSfmlSpineDrawable::isVisible() const noexcept
 	return m_isVisible;
 }
 
+void CSfmlSpineDrawable::setPhysics(Physics physics)
+{
+	m_physics = physics;
+}
+
+CSfmlSpineDrawable::Physics CSfmlSpineDrawable::getPhysics() const noexcept
+{
+	return m_physics;
+}
+
 void CSfmlSpineDrawable::update(float fDelta)
 {
 	if (m_skeleton != nullptr && m_animationState != nullptr)
@@ -113,7 +130,7 @@ void CSfmlSpineDrawable::update(float fDelta)
 #endif
 
 #if defined(SPINE_42)
-		m_skeleton->updateWorldTransform(spine::Physics::Physics_Update);
+		m_skeleton->updateWorldTransform(static_cast<spine::Physics>(m_physics));
 #else
 		m_skeleton->updateWorldTransform();
 #endif

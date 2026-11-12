@@ -7,7 +7,7 @@
 class CSfmlSpineDrawable : public sf::Drawable
 {
 public:
-	CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData, spine::AnimationStateData* pStateData = nullptr);
+	CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData);
 	~CSfmlSpineDrawable();
 
 	spine::Skeleton* skeleton() const noexcept;
@@ -34,7 +34,6 @@ public:
 	sf::FloatRect getBoundingBox() const;
 	sf::FloatRect getBoundingBoxOfSlot(const char* slotName, size_t nameLength, bool* found = nullptr) const;
 private:
-	bool m_hasOwnAnimationStateData = false;
 	mutable bool m_isAlphaPremultiplied = true;
 	bool m_isToForceBlendModeNormal = false;
 	bool m_isVisible = true;

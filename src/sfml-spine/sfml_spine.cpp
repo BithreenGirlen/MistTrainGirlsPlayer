@@ -23,7 +23,7 @@ static sf::BlendMode g_sfmlBlendModeMultiply = sf::BlendMode
 	sf::BlendMode::Equation::Add
 );
 
-CSfmlSpineDrawable::CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData, spine::AnimationStateData* pAnimationStateData)
+CSfmlSpineDrawable::CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData)
 {
 	spine::Bone::setYDown(true);
 
@@ -31,13 +31,7 @@ CSfmlSpineDrawable::CSfmlSpineDrawable(spine::SkeletonData* pSkeletonData, spine
 	m_sfmlVertices.setPrimitiveType(sf::PrimitiveType::Triangles);
 
 	m_skeleton = new spine::Skeleton(pSkeletonData);
-
-	if (pAnimationStateData == nullptr)
-	{
-		pAnimationStateData = new spine::AnimationStateData(pSkeletonData);
-		m_hasOwnAnimationStateData = true;
-	}
-
+	spine::AnimationStateData* pAnimationStateData = new spine::AnimationStateData(pSkeletonData);
 	m_animationState = new spine::AnimationState(pAnimationStateData);
 }
 
@@ -45,10 +39,8 @@ CSfmlSpineDrawable::~CSfmlSpineDrawable()
 {
 	if (m_animationState != nullptr)
 	{
-		if (m_hasOwnAnimationStateData)
-		{
-			delete m_animationState->getData();
-		}
+		spine::AnimationStateData* pAnimationStateData = m_animationState->getData();
+		delete pAnimationStateData;
 
 		delete m_animationState;
 	}
